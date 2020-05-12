@@ -19,35 +19,31 @@ public class Controller {
 	}
 
 	public void getInputHold() {
-		
-		// Movement
-		/*
-		 * if (handler.getKeyManager().W) { if(!hasJumped || bhopEnable) {
-		 * creature.jump(); hasJumped = true; } } else hasJumped = false;
-		 */
-		
-		if 		(handler.getKeyManager().A && handler.getKeyManager().SHIFT)
-				creature.move(creature.getSprintingMultiplier(), -1);
+
+		if (handler.getKeyManager().A && handler.getKeyManager().SHIFT)
+			creature.move(creature.getSprintingMultiplier(), -1);
 		else if (handler.getKeyManager().A)
-				creature.move(1.0f, -1);
-		else if	(handler.getKeyManager().D && handler.getKeyManager().SHIFT)
-				creature.move(creature.getSprintingMultiplier(), 1);
+			creature.move(1.0f, -1);
+		else if (handler.getKeyManager().D && handler.getKeyManager().SHIFT)
+			creature.move(creature.getSprintingMultiplier(), 1);
 		else if (handler.getKeyManager().D)
-				creature.move(1.0f, 1);
-		else 	creature.move(0, 0);
+			creature.move(1.0f, 1);
+		else
+			creature.move(0, 0);
 	}
-	
+
 	public void getInputPressed(KeyEvent e) {
-		if(e.getKeyCode() == KeyEvent.VK_C) {
-			creature.setVx(Math.signum(creature.getVox())*15.0f);
-			creature.setVox(Math.signum(creature.getVox())*15.0f);
+
+		if (e.getKeyCode() == KeyEvent.VK_C) {
+			creature.setVx(Math.signum(creature.getVox()) * 15.0f);
+			creature.setVox(Math.signum(creature.getVox()) * 15.0f);
 			creature.setVoy(Math.signum(-15.0f));
 		}
-		if(e.getKeyCode() == KeyEvent.VK_W)
+		if (e.getKeyCode() == KeyEvent.VK_W)
 			creature.jump();
-		if(e.getKeyCode() == KeyEvent.VK_F1)
+		if (e.getKeyCode() == KeyEvent.VK_F1)
 			Settings.toggleConsole();
-		if(e.getKeyCode() == KeyEvent.VK_F2)
+		if (e.getKeyCode() == KeyEvent.VK_F2)
 			Settings.toggleColisions();
 	}
 

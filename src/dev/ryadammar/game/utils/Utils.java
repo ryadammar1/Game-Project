@@ -35,4 +35,12 @@ public class Utils {
 			return -1;
 		}
 	}
+	
+	public static boolean parseBool(String bool) {
+		switch(bool) {
+		case ("true") : return true;
+		default : return false;
+		}
+			
+	}
 }

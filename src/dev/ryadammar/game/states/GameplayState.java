@@ -6,8 +6,8 @@ import dev.ryadammar.game.Handler;
 import dev.ryadammar.game.entities.creatures.Player;
 import dev.ryadammar.game.worlds.World;
 
-public class GameplayState extends State{
-	
+public class GameplayState extends State {
+
 	private Player player;
 	private World world;
 
@@ -18,25 +18,19 @@ public class GameplayState extends State{
 		player = new Player(handler, world.getSpawnX(), world.getSpawnY());
 		handler.setPlayer(player);
 	}
-	
+
 	@Override
 	public void tick() {
 		world.tick();
 		player.tick();
 	}
 
-	// LEVEL BUILDER
-	/**
-	 * @param Graphics g
-	 * This method renders instances (world, entities, etc) 
-	 * using the classes render method.
-	 */
 	@Override
 	public void render(Graphics g) {
 		world.render(g);
 		player.render(g);
 	}
-	
+
 	public Player getPlayer() {
 		return player;
 	}
