@@ -5,7 +5,7 @@ import dev.ryadammar.game.gfx.Assets;
 public class GrassTile extends Tile {
 
 	public GrassTile(int id) {
-		super(Assets.grass, id);
+		super(Assets.a_tiles.get(id), id);
 	}
 	
 }

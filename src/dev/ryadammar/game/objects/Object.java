@@ -10,7 +10,7 @@ public class Object {
 
 	public static Object[] objects = new Object[256];
 	
-	public static Object plateform_m1 = new Object(0, 64, 32, Assets.plateform_m1, true);
+	public static Object plateform_m1 = new Object(0, 64, 32, Assets.a_tiles.get(5), true);
 	
 	// Object class
 	

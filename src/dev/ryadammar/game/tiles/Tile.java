@@ -9,11 +9,10 @@ public class Tile {
 	public static Tile[] tiles = new Tile[256];
 	
 	// Construction of all tiles with unique ID's
-	public static Tile grassTile = new GrassTile(0);
+	public static Tile defaultTile = new DefaultTile(0);
 	public static Tile dirtTile = new DirtTile(1);
-	public static Tile rockTile = new RockTile(2);
-	public static Tile defaultTile = new DefaultTile(3);
-	
+	public static Tile grassTile = new GrassTile(2);
+	public static Tile rockTile = new RockTile(3);
 	
 	// Tile class
 	public static final int DEFAULT_TILEWIDTH = 64, DEFAULT_TILEHEIGHT = 64;

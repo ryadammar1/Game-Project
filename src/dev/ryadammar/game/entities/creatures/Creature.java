@@ -17,6 +17,12 @@ public abstract class Creature extends Entity {
 	public static final float DEFAULT_JUMP_SPEED = 3.0f;
 	public static final int DEFAULT_WIDTH = 64, DEFAULT_HEIGHT = 64;
 	public static final boolean DEFAULT_DRAW_SPEED = false;
+
+	protected enum Action {idle, walk, sprint, fall}
+	protected Action action;
+	
+	protected enum Direction {right, left}
+	protected Direction direction;
 	
 	protected int health;
 	
@@ -36,12 +42,13 @@ public abstract class Creature extends Entity {
 
 	protected int numJump;
 	protected int jumpCounter;
-
-	protected boolean drawSpeed;
+	// End Movement
 	
 	public Creature(Handler handler, float x, float y, int width, int height) {
 		super(handler, x, y, width, height);
 		health = DEFAULT_HEALTH;
+		action = Action.idle;
+		direction = Direction.right;
 		
 		//Movement
 		jumpSpeed = DEFAULT_JUMP_SPEED;
@@ -60,9 +67,6 @@ public abstract class Creature extends Entity {
 		this.Vox = 0;
 		this.Vx = 0;
 		this.spf = handler.getGame().getSpf();
-		
-		drawSpeed = DEFAULT_DRAW_SPEED;
-
 	}
 	
 	public void jump() {
@@ -92,8 +96,8 @@ public abstract class Creature extends Entity {
 		}
 		
 		if(collisionDown()) {
-			if(Vy >= 7)
-				System.out.println("ouch");
+			if(Vy >= 5)
+				health -= (int)(Vy-5);
 			Vx = movement*direction*Math.min(Math.abs(maxGroundSpeed),Math.abs(Vox + direction*ga*spf));		
 			x += Vx;
 			Vox = Vx;
@@ -113,6 +117,24 @@ public abstract class Creature extends Entity {
 			Vox = Vx;
 			}
 		}
+	}
+	
+	public void action() {
+		if(Math.abs(Vy) > 0)
+			action = Action.fall;
+		else if(Math.abs(Vx) < 0.5)
+			action = Action.idle;
+		else if(Math.abs(Vx) < maxGroundSpeed*sprintingMultiplier)
+			action = Action.walk;
+		else if(Math.abs(Vx) >= maxGroundSpeed*sprintingMultiplier)
+			action = Action.sprint;
+	}
+	
+	public void direction() {
+		if(Vx > 0.3)
+			direction = Direction.right;
+		if(Vx < -0.3)
+			direction = Direction.left;
 	}
 	
 	public void gravity() {

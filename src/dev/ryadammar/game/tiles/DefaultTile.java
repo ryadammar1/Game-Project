@@ -8,7 +8,7 @@ import dev.ryadammar.game.gfx.Assets;
 public class DefaultTile extends Tile {
 
 	public DefaultTile(int id) {
-		super(Assets.defaultTile, id);
+		super(Assets.a_tiles.get(id), id);
 	}
 	
 	@Override
