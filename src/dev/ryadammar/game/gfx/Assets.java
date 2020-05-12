@@ -15,7 +15,6 @@ public class Assets {
 	public static ArrayList<BufferedImage> a_player_idle_r;
 	public static ArrayList<BufferedImage> a_player_idle_l;
 	public static ArrayList<BufferedImage> a_tiles;
-	public static ArrayList<BufferedImage> a_scenes;
 
 	public static void init() {
 
@@ -47,30 +46,6 @@ public class Assets {
 		a_player_idle_r = s_player_idle_r.extractSprites();
 		a_player_idle_l = s_player_idle_l.extractSprites();
 		a_tiles = s_tiles.extractSprites();
-
-		// Background
-		a_scenes = new ArrayList<BufferedImage>();
-		a_scenes.add(ImageLoader.loadImage("/worlds/bg_0.png"));
-		a_scenes.add(ImageLoader.loadImage("/worlds/bg_1.png"));
-		a_scenes.add(ImageLoader.loadImage("/worlds/bg_2.png"));
-		a_scenes.add(ImageLoader.loadImage("/worlds/bg_2_a.png"));
-	}
-
-	public static BufferedImage getAssetByString(String string) throws Exception {
-		switch (string) {
-		case "null":
-			return null;
-		case "bg_0":
-			return a_scenes.get(0);
-		case "bg_1":
-			return a_scenes.get(1);
-		case "bg_2":
-			return a_scenes.get(2);
-		case "bg_2_a":
-			return a_scenes.get(3);
-		default:
-			throw new Exception("World not found");
-		}
 	}
 
 }

@@ -6,14 +6,20 @@ import java.awt.Rectangle;
 import dev.ryadammar.game.Handler;
 
 public abstract class Entity {
-
-	public static final boolean DEFAULT_DRAW_COLLISIONS = false;
+	
+	public final static int BOUND_SUBDIVISON = 1;
 	
 	protected Handler handler;
 	protected float x, y;
 	protected int width, height;
-	protected Rectangle bounds;
-	protected boolean drawColisions;
+	
+	protected Rectangle[] subhitboxes;
+	protected int bsubdiv;
+
+	protected int hitbox_x;
+	protected int hitbox_y;
+	protected int hitbox_height;
+	protected int hitbox_width;
 	
 	public Entity(Handler handler, float x, float y, int width, int height) {
 		this.x = x;
@@ -21,9 +27,11 @@ public abstract class Entity {
 		this.width = width;
 		this.height = height;
 		this.handler = handler;
-		
-		bounds = new Rectangle(0, 0, width, height);
-		drawColisions = DEFAULT_DRAW_COLLISIONS;
+		this.bsubdiv = BOUND_SUBDIVISON;
+		this.hitbox_x = 0;
+		this.hitbox_y = 0;
+		this.hitbox_height = height;
+		this.hitbox_width = width;
 	}
 	
 	public abstract void tick();
@@ -31,6 +39,13 @@ public abstract class Entity {
 	public abstract void render(Graphics g);
 	
 	public abstract void gravity();
+	
+	protected void generateHitbox() {
+		subhitboxes = new Rectangle[bsubdiv];
+		for(int i = 0; i < bsubdiv; i++ ) {	
+			subhitboxes[i] = new Rectangle(hitbox_x, hitbox_y + hitbox_height*i/bsubdiv, hitbox_width, hitbox_height/bsubdiv);
+		}
+	}
 	
 	public float getX() {
 		return x;

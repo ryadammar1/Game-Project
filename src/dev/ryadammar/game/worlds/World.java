@@ -8,6 +8,7 @@ import dev.ryadammar.game.Handler;
 import dev.ryadammar.game.gfx.Assets;
 import dev.ryadammar.game.scenes.Scene;
 import dev.ryadammar.game.gfx.ImageCropper;
+import dev.ryadammar.game.gfx.ImageLoader;
 import dev.ryadammar.game.tiles.Tile;
 import dev.ryadammar.game.utils.Utils;
 
@@ -51,8 +52,9 @@ public class World {
 
 		for (int y = yStart; y < yEnd; y++) {
 			for (int x = xStart; x < xEnd; x++) {
-				getTile(x, y).render(g, (int) (x * Tile.DEFAULT_TILEWIDTH - handler.getGameCamera().getxOffset()),
-						(int) (y * Tile.DEFAULT_TILEHEIGHT - handler.getGameCamera().getyOffset()));
+				if(getTile(x,y) != Tile.defaultTile)
+					getTile(x, y).render(g, (int) (x * Tile.DEFAULT_TILEWIDTH - handler.getGameCamera().getxOffset()),
+					(int) (y * Tile.DEFAULT_TILEHEIGHT - handler.getGameCamera().getyOffset()));
 			}
 		}
 	}
@@ -79,8 +81,9 @@ public class World {
 
 		for (int i = 0; i < bg_num; i++) {
 			try {
-				scenes.add(new Scene(handler, Assets.getAssetByString(tokens[6 + 5 * i]), Assets.getAssetByString(tokens[7 + 5 * i]),
-						Utils.parseInt(tokens[8 + 5 * i]), Utils.parseInt(tokens[9 + 5 * i]), Utils.parseBool(tokens [10 + 5 * i])));
+				scenes.add(new Scene(handler, ImageLoader.loadImage("/worlds/"+tokens[6 + 5 * i]+".png"), 
+						ImageLoader.loadImage("/worlds/"+tokens[7 + 5 * i]+".png"), Utils.parseInt(tokens[8 + 5 * i]), 
+						Utils.parseInt(tokens[9 + 5 * i]), Utils.parseBool(tokens [10 + 5 * i])));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

@@ -3,6 +3,8 @@ package dev.ryadammar.game.entities.creatures;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
+import java.awt.Rectangle;
+import java.util.ArrayList;
 
 import dev.ryadammar.game.Handler;
 import dev.ryadammar.game.Settings;
@@ -179,55 +181,115 @@ public abstract class Creature extends Entity {
 	// Collision
 	
 	public boolean collisionUp() {
-		return handler.getWorld().getScenes().get(2).getColisionBox().getOutline().contains
-				(new Point((int) Math.ceil(x + bounds.x + bounds.width),(int) Math.ceil((y + Vy + bounds.y + 1)))) ||
-				handler.getWorld().getScenes().get(2).getColisionBox().getOutline().contains
-				(new Point((int) Math.ceil(x + bounds.x),(int) Math.ceil((y + Vy + bounds.y + 1)))) || collisionUpTile();
+		
+		boolean collides = false;
+		ArrayList<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size()-1).getCollision().getOutline();
+		
+		for(Rectangle subhitbox : subhitboxes) {
+		if  (sceneCollision.contains
+			(new Point((int) (x + subhitbox.x + subhitbox.width),(int) ((y + Vy + subhitbox.y + 1))))
+			|| sceneCollision.contains
+			(new Point((int) (x + subhitbox.x),(int) ((y + Vy + subhitbox.y + 1))))) {
+			collides = true;
+			break;
+			}
+		}
+		
+		return collides || collisionUpTile();
 	}
 
 	public boolean collisionDown() {
-		return handler.getWorld().getScenes().get(2).getColisionBox().getOutline().contains
-				(new Point((int) Math.ceil(x + bounds.x + bounds.width),(int) Math.ceil((y + Vy + bounds.y + bounds.height + 1)))) ||
-				handler.getWorld().getScenes().get(2).getColisionBox().getOutline().contains
-				(new Point((int) Math.ceil(x + bounds.x),(int) Math.ceil((y + Vy + bounds.y + bounds.height + 1)))) || collisionDownTile();
+		boolean collides = false;
+		ArrayList<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size()-1).getCollision().getOutline();
+		
+		for(Rectangle subhitbox : subhitboxes) {
+		if  (sceneCollision.contains
+			(new Point((int) (x + subhitbox.x + subhitbox.width),(int) ((y + Vy + subhitbox.y + subhitbox.height + 1))))
+			|| sceneCollision.contains
+			(new Point((int) (x + subhitbox.x),(int) ((y + Vy + subhitbox.y + subhitbox.height + 1))))) {
+			collides = true;
+			break;
+			}
+		}
+		
+		return collides || collisionDownTile();
 	}
 
 	public boolean collisionRight() {
-		return handler.getWorld().getScenes().get(2).getColisionBox().getOutline().contains
-				(new Point((int) Math.ceil(x + bounds.x + Vx + bounds.width),(int) Math.ceil((y + bounds.y + bounds.height)))) ||
-				handler.getWorld().getScenes().get(2).getColisionBox().getOutline().contains
-				(new Point((int) Math.ceil(x + bounds.x + Vx + bounds.width),(int) Math.ceil((y + bounds.y)))) || collisionRightTile();
+		boolean collides = false;
+		ArrayList<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size()-1).getCollision().getOutline();
+		
+		for(Rectangle subhitbox : subhitboxes) {
+		if  (sceneCollision.contains
+			(new Point((int) (x + subhitbox.x + Vx + subhitbox.width),(int) ((y + subhitbox.y + subhitbox.height))))
+			|| sceneCollision.contains
+			(new Point((int) (x + subhitbox.x + Vx + subhitbox.width),(int) ((y + subhitbox.y))))) {
+			collides = true;
+			break;
+			}
+		}
+		
+		return collides || collisionRightTile();
 	}
 
 	public boolean collisionLeft() {
-		return handler.getWorld().getScenes().get(2).getColisionBox().getOutline().contains
-				(new Point((int) Math.ceil(x + bounds.x + Vx ),(int) Math.ceil((y + bounds.y + bounds.height)))) ||
-				handler.getWorld().getScenes().get(2).getColisionBox().getOutline().contains
-				(new Point((int) Math.ceil(x + bounds.x + Vx),(int) Math.ceil((y + bounds.y)))) || collisionLeftTile();
+		boolean collides = false;
+		ArrayList<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size()-1).getCollision().getOutline();
+		
+		for(Rectangle subhitbox : subhitboxes) {
+		if  (sceneCollision.contains
+			(new Point((int) (x + subhitbox.x + Vx),(int) ((y + subhitbox.y + subhitbox.height))))
+			|| sceneCollision.contains
+			(new Point((int) (x + subhitbox.x + Vx),(int) ((y + subhitbox.y))))) {
+			collides = true;
+			break;
+			}
+		}
+		
+		return collides || collisionLeftTile();
 	}
 
 	public boolean collisionUpTile() {
-		int ty = (int) ((y + Vy + bounds.y) / Tile.DEFAULT_TILEHEIGHT);
-		return handler.getWorld().getTile((int) (x + bounds.x) / Tile.DEFAULT_TILEWIDTH, ty).isSolid() || handler
-				.getWorld().getTile((int) (x + bounds.x + bounds.width) / Tile.DEFAULT_TILEWIDTH, ty).isSolid();
+		
+		for(Rectangle subhitbox : subhitboxes) {
+			int ty = (int) ((y + Vy + subhitbox.y) / Tile.DEFAULT_TILEHEIGHT);
+			if (handler.getWorld().getTile((int) (x + subhitbox.x) / Tile.DEFAULT_TILEWIDTH, ty).isSolid() || 
+					handler.getWorld().getTile((int) (x + subhitbox.x + subhitbox.width) / Tile.DEFAULT_TILEWIDTH, ty).isSolid())
+				return true;
+		}
+		return false;
 	}
 
 	public boolean collisionDownTile() {
-		int ty = (int) ((y + Vy + bounds.y + bounds.height) / Tile.DEFAULT_TILEHEIGHT);
-		return handler.getWorld().getTile((int) (x + bounds.x) / Tile.DEFAULT_TILEWIDTH, ty).isSolid() || handler
-				.getWorld().getTile((int) (x + bounds.x + bounds.width) / Tile.DEFAULT_TILEWIDTH, ty).isSolid();
+		
+		for(Rectangle subhitbox : subhitboxes) {
+			int ty = (int) ((y + Vy + subhitbox.y + subhitbox.height) / Tile.DEFAULT_TILEHEIGHT);
+			if (handler.getWorld().getTile((int) (x + subhitbox.x) / Tile.DEFAULT_TILEWIDTH, ty).isSolid() || 
+					handler.getWorld().getTile((int) (x + subhitbox.x + subhitbox.width) / Tile.DEFAULT_TILEWIDTH, ty).isSolid())
+				return true;
+		}
+		return false;
 	}
 
 	public boolean collisionRightTile() {
-		int tx = (int) ((x + Vx + bounds.x + bounds.width) / Tile.DEFAULT_TILEWIDTH);
-		return handler.getWorld().getTile(tx, (int) (y + bounds.y + 1) / Tile.DEFAULT_TILEHEIGHT).isSolid() || handler
-				.getWorld().getTile(tx, (int) (y + bounds.y + bounds.height - 1) / Tile.DEFAULT_TILEHEIGHT).isSolid();
+		
+		for(Rectangle subhitbox : subhitboxes) {
+			int tx = (int) ((x + Vx + subhitbox.x + subhitbox.width) / Tile.DEFAULT_TILEWIDTH);
+			if (handler.getWorld().getTile(tx, (int) (y + subhitbox.y + 1) / Tile.DEFAULT_TILEWIDTH).isSolid() || 
+					handler.getWorld().getTile(tx,(int) (y + subhitbox.y + subhitbox.height - 1) / Tile.DEFAULT_TILEWIDTH).isSolid())
+				return true;
+		}
+		return false;
 	}
 
 	public boolean collisionLeftTile() {
-		int tx = (int) ((x + Vx + bounds.x) / Tile.DEFAULT_TILEWIDTH);
-		return handler.getWorld().getTile(tx, (int) (y + bounds.y + 1) / Tile.DEFAULT_TILEHEIGHT).isSolid() || handler
-				.getWorld().getTile(tx, (int) (y + bounds.y + bounds.height - 1) / Tile.DEFAULT_TILEHEIGHT).isSolid();
+		for(Rectangle subhitbox : subhitboxes) {
+			int tx = (int) ((x + Vx + subhitbox.x) / Tile.DEFAULT_TILEWIDTH);
+			if (handler.getWorld().getTile(tx, (int) (y + subhitbox.y + 1) / Tile.DEFAULT_TILEWIDTH).isSolid() || 
+					handler.getWorld().getTile(tx,(int) (y + subhitbox.y + subhitbox.height - 1) / Tile.DEFAULT_TILEWIDTH).isSolid())
+				return true;
+		}
+		return false;
 	}
 
 	// Gfx
@@ -239,15 +301,17 @@ public abstract class Creature extends Entity {
 
 		if (Settings.drawColisions) {
 			g.setColor(Color.MAGENTA);
-			g.drawRect((int) (x + bounds.x - handler.getGameCamera().getxOffset()),
-					(int) (y + bounds.y - handler.getGameCamera().getyOffset()), bounds.width, bounds.height);
+			for(Rectangle subhitbox : subhitboxes) {
+				g.drawRect((int) (x + subhitbox.x - handler.getGameCamera().getxOffset()),
+						(int) (y + subhitbox.y - handler.getGameCamera().getyOffset()), subhitbox.width, subhitbox.height);
+			}
 		}
 
 		g.setFont(Utils.consoleFont);
 		g.setColor(Color.WHITE);
 		g.drawString("Health: " + Integer.toString(health),
-				(int) (x + bounds.x - handler.getGameCamera().getxOffset() - 16),
-				(int) (y + bounds.y - handler.getGameCamera().getyOffset() - 16));
+				(int) (x + hitbox_x - handler.getGameCamera().getxOffset() - 16),
+				(int) (y + hitbox_y - handler.getGameCamera().getyOffset() - 16));
 	}
 
 	public Animation getAnimation() {

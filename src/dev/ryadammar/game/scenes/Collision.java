@@ -4,11 +4,11 @@ import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
-public class ColisionBox {
+public class Collision {
 
 	private ArrayList<Point> outline;
 
-	public ColisionBox(BufferedImage alpha) {
+	public Collision(BufferedImage alpha) {
 		outline = GenerateOutline(alpha);
 	}
 

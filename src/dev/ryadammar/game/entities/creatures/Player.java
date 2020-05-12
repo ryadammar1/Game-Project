@@ -2,6 +2,7 @@ package dev.ryadammar.game.entities.creatures;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Rectangle;
 
 import dev.ryadammar.game.Controller;
 import dev.ryadammar.game.Handler;
@@ -15,7 +16,8 @@ public class Player extends Creature {
 	private Controller controller;
 
 	/**
-	 * Player constructor The bounds properties and player width and height (in the
+	 * Player constructor 
+	 * The hitbox properties and player width and height (in the
 	 * super constructor call) must be hard coded to fit the attributes of the
 	 * player sprite.
 	 * 
@@ -29,10 +31,14 @@ public class Player extends Creature {
 		controller = new Controller(this, handler);
 
 		// Collision
-		bounds.x = 54;
-		bounds.y = 37;
-		bounds.height = 93;
-		bounds.width = 35;
+		bsubdiv = 5;
+		
+		hitbox_x = 50;
+		hitbox_y = 38;
+		hitbox_height = 93;
+		hitbox_width = 40;
+		
+		generateHitbox();
 
 		// Properties
 		maxJumpsNum = 2;
