@@ -10,12 +10,12 @@ public class KeyManager implements KeyListener {
 	private boolean[] keys;
 	private Handler handler;
 	public boolean SPACE, W, C, A, D, SHIFT, DOWN, UP, RIGHT, LEFT;
-	
+
 	public KeyManager(Handler handler) {
 		this.handler = handler;
 		keys = new boolean[256];
 	}
-	
+
 	public void tick() {
 		W = keys[KeyEvent.VK_W];
 		C = keys[KeyEvent.VK_C];
@@ -27,7 +27,7 @@ public class KeyManager implements KeyListener {
 		LEFT = keys[KeyEvent.VK_LEFT];
 		SHIFT = keys[KeyEvent.VK_SHIFT];
 	}
-	
+
 	@Override
 	public void keyTyped(KeyEvent e) {
 
@@ -38,7 +38,7 @@ public class KeyManager implements KeyListener {
 		try {
 			handler.getPlayer().getController().getInputPressed(e);
 			keys[e.getKeyCode()] = true;
-		}catch(Exception e_input){
+		} catch (Exception e_input) {
 		}
 	}
 

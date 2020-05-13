@@ -14,6 +14,7 @@ public abstract class Entity {
 	protected float x, y;
 	protected int width, height;
 	
+	protected Rectangle hitbox;
 	protected Rectangle[][] subhitboxes;
 	protected int hitbox_subdiv_x;
 	protected int hitbox_subdiv_y;

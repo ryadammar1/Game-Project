@@ -5,6 +5,7 @@ import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import dev.ryadammar.game.Handler;
 import dev.ryadammar.game.Settings;
@@ -187,7 +188,7 @@ public abstract class Creature extends Entity {
 	public boolean collisionUp() {
 		
 		boolean collides = false;
-		ArrayList<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size()-1).getCollision().getOutline();
+		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size()-1).getCollision().getOutline();
 		
 		for(int i = 0; i < hitbox_subdiv_y; i++) {	
 			Rectangle subhitbox = subhitboxes[0][i];
@@ -206,7 +207,7 @@ public abstract class Creature extends Entity {
 
 	public boolean collisionDown() {
 		boolean collides = false;
-		ArrayList<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size()-1).getCollision().getOutline();
+		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size()-1).getCollision().getOutline();
 
 		for(int i = 0; i < hitbox_subdiv_y; i++) {	
 			Rectangle subhitbox = subhitboxes[hitbox_subdiv_x - 1][i];
@@ -225,7 +226,7 @@ public abstract class Creature extends Entity {
 
 	public boolean collisionRight() {
 		boolean collides = false;
-		ArrayList<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size()-1).getCollision().getOutline();
+		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size()-1).getCollision().getOutline();
 		
 		for(int i = 0; i < hitbox_subdiv_x; i++) {	
 			Rectangle subhitbox = subhitboxes[i][hitbox_subdiv_y - 1];
@@ -244,7 +245,7 @@ public abstract class Creature extends Entity {
 
 	public boolean collisionLeft() {
 		boolean collides = false;
-		ArrayList<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size()-1).getCollision().getOutline();
+		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size()-1).getCollision().getOutline();
 
 		for(int i = 0; i < hitbox_subdiv_x; i++) {	
 			Rectangle subhitbox = subhitboxes[i][0];
@@ -263,7 +264,7 @@ public abstract class Creature extends Entity {
 	
 	public boolean collision(int x, int y) {
 		boolean collides = false;
-		ArrayList<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size()-1).getCollision().getOutline();
+		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size()-1).getCollision().getOutline();
 		
 		Rectangle subhitbox = subhitboxes[x][y];
 		if  (sceneCollision.contains

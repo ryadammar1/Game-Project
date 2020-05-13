@@ -3,29 +3,32 @@ package dev.ryadammar.game.scenes;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class Collision {
 
-	private ArrayList<Point> outline;
+	private HashSet<Point> outline;
 
 	public Collision(BufferedImage alpha) {
+		
+		
 		outline = GenerateOutline(alpha);
 	}
 
-	private ArrayList<Point> GenerateOutline(BufferedImage alpha) {
+	private HashSet<Point> GenerateOutline(BufferedImage alpha) {
 		
-		ArrayList<Point> tempOutline = new ArrayList<Point>();
+		HashSet<Point> tempOutline = new HashSet<Point>();
 		
 		for( int i = 0; i < alpha.getWidth(); i++ )
 		    for( int j = 0; j < alpha.getHeight(); j++ ) {
 		    	if(alpha.getRGB(i, j) < -1)
-		    		tempOutline.add(new Point(i, j));
+		    		tempOutline.add(new Point(i,j));
 		    }
 		
 		return tempOutline;
 	}
 	
-	public ArrayList<Point> getOutline() {
+	public HashSet<Point> getOutline() {
 		return this.outline;
 	}
 

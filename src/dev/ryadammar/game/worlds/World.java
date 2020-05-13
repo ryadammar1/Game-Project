@@ -1,14 +1,13 @@
 package dev.ryadammar.game.worlds;
 
 import java.awt.Graphics;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
 import dev.ryadammar.game.Handler;
-import dev.ryadammar.game.gfx.Assets;
-import dev.ryadammar.game.scenes.Scene;
-import dev.ryadammar.game.gfx.ImageCropper;
 import dev.ryadammar.game.gfx.ImageLoader;
+import dev.ryadammar.game.scenes.Area;
+import dev.ryadammar.game.scenes.DamageArea;
+import dev.ryadammar.game.scenes.Scene;
 import dev.ryadammar.game.tiles.Tile;
 import dev.ryadammar.game.utils.Utils;
 
@@ -21,12 +20,14 @@ public class World {
 
 	private int bg_num;
 	private ArrayList<Scene> scenes;
+	private ArrayList<Area> areas;
 
 	private int scale;
 	private float g; // Gravity acceleration in pixels per spf^2
 
 	public World(Handler handler, String path) {
 		scenes = new ArrayList<Scene>();
+		areas = new ArrayList<Area>();
 		this.handler = handler;
 		loadWorld(path);
 
@@ -34,7 +35,12 @@ public class World {
 	}
 
 	public void tick() {
-
+		for (int i = 0; i < bg_num; i++) {
+			scenes.get(i).tick();
+		}
+		for (int i = 0; i < areas.size(); i++) {
+			areas.get(i).tick();
+		}
 	}
 
 	public void render(Graphics g) {
@@ -42,15 +48,11 @@ public class World {
 		for (int i = 0; i < bg_num; i++) {
 			scenes.get(i).render(g);
 		}
-
-		int xStart = (int) Math.max(0, handler.getGameCamera().getxOffset() / Tile.DEFAULT_TILEWIDTH);
-		int xEnd = (int) Math.min(width,
-				(handler.getGameCamera().getxOffset() + handler.getWidth()) / Tile.DEFAULT_TILEWIDTH + 1);
-		int yStart = (int) Math.max(0, handler.getGameCamera().getyOffset() / Tile.DEFAULT_TILEHEIGHT);
-		int yEnd = (int) Math.min(height,
-				(handler.getGameCamera().getyOffset() + handler.getHeight()) / Tile.DEFAULT_TILEHEIGHT + 1);
+		for (int i = 0; i < areas.size(); i++) {
+			areas.get(i).render(g);
+		}
 	}
-
+	
 	private void loadWorld(String path) {
 		String file = Utils.loadFileAsString(path);
 		String[] tokens = file.split("\\s+");
@@ -70,6 +72,9 @@ public class World {
 				e.printStackTrace();
 			}
 		}
+		
+
+		areas.add(new DamageArea(handler, 100, 100, 50, 50));
 	}
 
 	public int getScale() {
