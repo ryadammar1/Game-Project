@@ -9,7 +9,7 @@ public class KeyManager implements KeyListener {
 
 	private boolean[] keys;
 	private Handler handler;
-	public boolean SPACE, W, C, A, D, SHIFT;
+	public boolean SPACE, W, C, A, D, SHIFT, DOWN, UP, RIGHT, LEFT;
 	
 	public KeyManager(Handler handler) {
 		this.handler = handler;
@@ -21,6 +21,10 @@ public class KeyManager implements KeyListener {
 		C = keys[KeyEvent.VK_C];
 		A = keys[KeyEvent.VK_A];
 		D = keys[KeyEvent.VK_D];
+		DOWN = keys[KeyEvent.VK_DOWN];
+		UP = keys[KeyEvent.VK_UP];
+		RIGHT = keys[KeyEvent.VK_RIGHT];
+		LEFT = keys[KeyEvent.VK_LEFT];
 		SHIFT = keys[KeyEvent.VK_SHIFT];
 	}
 	

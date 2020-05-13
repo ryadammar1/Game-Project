@@ -30,11 +30,11 @@ public abstract class Creature extends Entity {
 
 	// Movement
 
-	protected enum Action {
+	protected enum State {
 		idle, walk, sprint, fall
 	}
 
-	protected Action action;
+	protected State state;
 
 	protected enum Direction {
 		right, left
@@ -73,7 +73,7 @@ public abstract class Creature extends Entity {
 		super(handler, x, y, width, height);
 		health = DEFAULT_HEALTH;
 
-		action = Action.idle;
+		state = State.idle;
 		direction = Direction.right;
 
 		jumpSpeed = DEFAULT_JUMP_SPEED;
@@ -122,8 +122,6 @@ public abstract class Creature extends Entity {
 		}
 
 		if (collisionDown()) {
-			if (Vy >= 5)
-				health -= (int) (Vy - 5);
 			Vx = movement * direction * Math.min(Math.abs(groundSpeed), Math.abs(Vox + direction * ga * spf));
 			x += Vx;
 			Vox = Vx;
@@ -134,7 +132,7 @@ public abstract class Creature extends Entity {
 			} else {
 				Vx = direction * Math.min(Math.abs(direction * groundSpeed * aa + Vox),
 						Math.abs(Vox + direction * aa * spf));
-				if (Math.signum(Vx) == Math.signum(Vox) || Settings.bhopEnable)
+				if (Math.signum(Vx) == Math.signum(Vox))
 					x += Vx;
 				else
 					Vx *= d;
@@ -144,15 +142,15 @@ public abstract class Creature extends Entity {
 		}
 	}
 
-	public void action() {
+	public void state() {
 		if (Math.abs(Vy) > 0)
-			action = Action.fall;
+			state = State.fall;
 		else if (Math.abs(Vx) < 0.5)
-			action = Action.idle;
+			state = State.idle;
 		else if (Math.abs(Vx) < groundSpeed * sprintMult)
-			action = Action.walk;
+			state = State.walk;
 		else if (Math.abs(Vx) >= groundSpeed * sprintMult)
-			action = Action.sprint;
+			state = State.sprint;
 	}
 
 	public void direction() {
@@ -172,10 +170,16 @@ public abstract class Creature extends Entity {
 			Vy = (Voy + g * spf);
 			y += Vy;
 			Voy = Vy;
+					
 		} else {
 			Voy = 0;
 			Vy = 0;
 		}
+	}
+	
+	public void damage() {
+		if (Vy >= 5 && collisionDown())
+			health -= (int) (Vy - 5);
 	}
 
 	// Collision
@@ -185,7 +189,9 @@ public abstract class Creature extends Entity {
 		boolean collides = false;
 		ArrayList<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size()-1).getCollision().getOutline();
 		
-		for(Rectangle subhitbox : subhitboxes) {
+		for(int i = 0; i < hitbox_subdiv_y; i++) {	
+			Rectangle subhitbox = subhitboxes[0][i];
+			
 		if  (sceneCollision.contains
 			(new Point((int) (x + subhitbox.x + subhitbox.width),(int) ((y + Vy + subhitbox.y + 1))))
 			|| sceneCollision.contains
@@ -195,14 +201,16 @@ public abstract class Creature extends Entity {
 			}
 		}
 		
-		return collides || collisionUpTile();
+		return collides;
 	}
 
 	public boolean collisionDown() {
 		boolean collides = false;
 		ArrayList<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size()-1).getCollision().getOutline();
-		
-		for(Rectangle subhitbox : subhitboxes) {
+
+		for(int i = 0; i < hitbox_subdiv_y; i++) {	
+			Rectangle subhitbox = subhitboxes[hitbox_subdiv_x - 1][i];
+			
 		if  (sceneCollision.contains
 			(new Point((int) (x + subhitbox.x + subhitbox.width),(int) ((y + Vy + subhitbox.y + subhitbox.height + 1))))
 			|| sceneCollision.contains
@@ -212,14 +220,16 @@ public abstract class Creature extends Entity {
 			}
 		}
 		
-		return collides || collisionDownTile();
+		return collides;
 	}
 
 	public boolean collisionRight() {
 		boolean collides = false;
 		ArrayList<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size()-1).getCollision().getOutline();
 		
-		for(Rectangle subhitbox : subhitboxes) {
+		for(int i = 0; i < hitbox_subdiv_x; i++) {	
+			Rectangle subhitbox = subhitboxes[i][hitbox_subdiv_y - 1];
+			
 		if  (sceneCollision.contains
 			(new Point((int) (x + subhitbox.x + Vx + subhitbox.width),(int) ((y + subhitbox.y + subhitbox.height))))
 			|| sceneCollision.contains
@@ -229,14 +239,16 @@ public abstract class Creature extends Entity {
 			}
 		}
 		
-		return collides || collisionRightTile();
+		return collides;
 	}
 
 	public boolean collisionLeft() {
 		boolean collides = false;
 		ArrayList<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size()-1).getCollision().getOutline();
+
+		for(int i = 0; i < hitbox_subdiv_x; i++) {	
+			Rectangle subhitbox = subhitboxes[i][0];
 		
-		for(Rectangle subhitbox : subhitboxes) {
 		if  (sceneCollision.contains
 			(new Point((int) (x + subhitbox.x + Vx),(int) ((y + subhitbox.y + subhitbox.height))))
 			|| sceneCollision.contains
@@ -246,52 +258,24 @@ public abstract class Creature extends Entity {
 			}
 		}
 		
-		return collides || collisionLeftTile();
+		return collides;
 	}
-
-	public boolean collisionUpTile() {
+	
+	public boolean collision(int x, int y) {
+		boolean collides = false;
+		ArrayList<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size()-1).getCollision().getOutline();
 		
-		for(Rectangle subhitbox : subhitboxes) {
-			int ty = (int) ((y + Vy + subhitbox.y) / Tile.DEFAULT_TILEHEIGHT);
-			if (handler.getWorld().getTile((int) (x + subhitbox.x) / Tile.DEFAULT_TILEWIDTH, ty).isSolid() || 
-					handler.getWorld().getTile((int) (x + subhitbox.x + subhitbox.width) / Tile.DEFAULT_TILEWIDTH, ty).isSolid())
-				return true;
-		}
-		return false;
-	}
-
-	public boolean collisionDownTile() {
+		Rectangle subhitbox = subhitboxes[x][y];
+		if  (sceneCollision.contains
+			(new Point((int) (x + subhitbox.x + Vx + subhitbox.width),(int) ((y + subhitbox.y + subhitbox.height))))
+			|| sceneCollision.contains
+			(new Point((int) (x + subhitbox.x + Vx + subhitbox.width),(int) ((y + subhitbox.y))))) {
+			collides = true;
+			}
 		
-		for(Rectangle subhitbox : subhitboxes) {
-			int ty = (int) ((y + Vy + subhitbox.y + subhitbox.height) / Tile.DEFAULT_TILEHEIGHT);
-			if (handler.getWorld().getTile((int) (x + subhitbox.x) / Tile.DEFAULT_TILEWIDTH, ty).isSolid() || 
-					handler.getWorld().getTile((int) (x + subhitbox.x + subhitbox.width) / Tile.DEFAULT_TILEWIDTH, ty).isSolid())
-				return true;
-		}
-		return false;
+		return collides;
 	}
-
-	public boolean collisionRightTile() {
-		
-		for(Rectangle subhitbox : subhitboxes) {
-			int tx = (int) ((x + Vx + subhitbox.x + subhitbox.width) / Tile.DEFAULT_TILEWIDTH);
-			if (handler.getWorld().getTile(tx, (int) (y + subhitbox.y + 1) / Tile.DEFAULT_TILEWIDTH).isSolid() || 
-					handler.getWorld().getTile(tx,(int) (y + subhitbox.y + subhitbox.height - 1) / Tile.DEFAULT_TILEWIDTH).isSolid())
-				return true;
-		}
-		return false;
-	}
-
-	public boolean collisionLeftTile() {
-		for(Rectangle subhitbox : subhitboxes) {
-			int tx = (int) ((x + Vx + subhitbox.x) / Tile.DEFAULT_TILEWIDTH);
-			if (handler.getWorld().getTile(tx, (int) (y + subhitbox.y + 1) / Tile.DEFAULT_TILEWIDTH).isSolid() || 
-					handler.getWorld().getTile(tx,(int) (y + subhitbox.y + subhitbox.height - 1) / Tile.DEFAULT_TILEWIDTH).isSolid())
-				return true;
-		}
-		return false;
-	}
-
+	
 	// Gfx
 
 	@Override
@@ -301,9 +285,11 @@ public abstract class Creature extends Entity {
 
 		if (Settings.drawColisions) {
 			g.setColor(Color.MAGENTA);
-			for(Rectangle subhitbox : subhitboxes) {
+			for(Rectangle subhitboxes[] : subhitboxes) {
+				for(Rectangle subhitbox : subhitboxes) {
 				g.drawRect((int) (x + subhitbox.x - handler.getGameCamera().getxOffset()),
 						(int) (y + subhitbox.y - handler.getGameCamera().getyOffset()), subhitbox.width, subhitbox.height);
+				}
 			}
 		}
 
@@ -316,25 +302,25 @@ public abstract class Creature extends Entity {
 
 	public Animation getAnimation() {
 
-		if (action != Action.fall) {
+		if (state != State.fall) {
 			anim_jump_r.reset();
 			anim_jump_l.reset();
 		}
-		if (action == Action.walk && direction == Direction.right)
+		if (state == State.walk && direction == Direction.right)
 			return anim_walk_r;
-		else if (action == Action.walk && direction == Direction.left)
+		else if (state == State.walk && direction == Direction.left)
 			return anim_walk_l;
-		else if (action == Action.idle && direction == Direction.right)
+		else if (state == State.idle && direction == Direction.right)
 			return anim_idle_r;
-		else if (action == Action.idle && direction == Direction.left)
+		else if (state == State.idle && direction == Direction.left)
 			return anim_idle_l;
-		else if (action == Action.fall && direction == Direction.right)
+		else if (state == State.fall && direction == Direction.right)
 			return anim_jump_r;
-		else if (action == Action.fall && direction == Direction.left)
+		else if (state == State.fall && direction == Direction.left)
 			return anim_jump_l;
-		else if (action == Action.sprint && direction == Direction.right)
+		else if (state == State.sprint && direction == Direction.right)
 			return anim_sprint_r;
-		else if (action == Action.sprint && direction == Direction.left)
+		else if (state == State.sprint && direction == Direction.left)
 			return anim_sprint_l;
 		else
 			return anim_idle_r;

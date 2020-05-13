@@ -49,24 +49,6 @@ public class World {
 		int yStart = (int) Math.max(0, handler.getGameCamera().getyOffset() / Tile.DEFAULT_TILEHEIGHT);
 		int yEnd = (int) Math.min(height,
 				(handler.getGameCamera().getyOffset() + handler.getHeight()) / Tile.DEFAULT_TILEHEIGHT + 1);
-
-		for (int y = yStart; y < yEnd; y++) {
-			for (int x = xStart; x < xEnd; x++) {
-				if(getTile(x,y) != Tile.defaultTile)
-					getTile(x, y).render(g, (int) (x * Tile.DEFAULT_TILEWIDTH - handler.getGameCamera().getxOffset()),
-					(int) (y * Tile.DEFAULT_TILEHEIGHT - handler.getGameCamera().getyOffset()));
-			}
-		}
-	}
-
-	public Tile getTile(int x, int y) {
-		if (x < 0 || y < 0 || x >= width || y >= height)
-			return Tile.defaultTile;
-
-		Tile t = Tile.tiles[tiles[x][y]];
-		if (t == null)
-			return Tile.defaultTile;
-		return t;
 	}
 
 	private void loadWorld(String path) {
@@ -86,16 +68,6 @@ public class World {
 						Utils.parseInt(tokens[9 + 5 * i]), Utils.parseBool(tokens [10 + 5 * i])));
 			} catch (Exception e) {
 				e.printStackTrace();
-			}
-		}
-
-		tiles = new int[width][height];
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				int positionInLoop = (x + y * width) + 6 + 5 * bg_num; // Converts the 2D array into a 1D array,
-				// and adds 16 to skip the for first parameters
-				// of the level
-				tiles[x][y] = Utils.parseInt(tokens[positionInLoop]);
 			}
 		}
 	}

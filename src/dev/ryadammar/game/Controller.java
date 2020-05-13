@@ -9,16 +9,28 @@ public class Controller {
 
 	private Creature creature;
 	private Handler handler;
-	private boolean bhopEnable;
 	private boolean hasJumped;
 
 	public Controller(Creature creature, Handler handler) {
 		this.creature = creature;
 		this.handler = handler;
-		this.bhopEnable = Settings.bhopEnable;
 	}
 
 	public void getInputHold() {
+
+		if (handler.getKeyManager().DOWN) 
+				handler.getGameCamera().setyPeek(150);
+		else if (handler.getKeyManager().UP) 
+			handler.getGameCamera().setyPeek(-150);
+		else
+			handler.getGameCamera().setyPeek(0);
+		
+		if (handler.getKeyManager().RIGHT) 
+				handler.getGameCamera().setxPeek(150);
+		else if (handler.getKeyManager().LEFT) 
+			handler.getGameCamera().setxPeek(-150);
+		else
+			handler.getGameCamera().setxPeek(0);
 
 		if (handler.getKeyManager().A && handler.getKeyManager().SHIFT)
 			creature.move(creature.getSprintingMultiplier(), -1);

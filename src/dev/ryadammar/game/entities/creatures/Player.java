@@ -7,6 +7,7 @@ import java.awt.Rectangle;
 import dev.ryadammar.game.Controller;
 import dev.ryadammar.game.Handler;
 import dev.ryadammar.game.Settings;
+import dev.ryadammar.game.entities.creatures.Creature.Direction;
 import dev.ryadammar.game.gfx.Animation;
 import dev.ryadammar.game.gfx.Assets;
 import dev.ryadammar.game.utils.Utils;
@@ -31,7 +32,8 @@ public class Player extends Creature {
 		controller = new Controller(this, handler);
 
 		// Collision
-		bsubdiv = 5;
+		hitbox_subdiv_x = 5;
+		hitbox_subdiv_y = 3;
 		
 		hitbox_x = 50;
 		hitbox_y = 38;
@@ -59,9 +61,10 @@ public class Player extends Creature {
 		controller.getInputHold();
 		handler.getGameCamera().centerOnEntity(this);
 
-		action();
+		state();
 		direction();
 		gravity();
+		damage();
 
 		anim_idle_r.tick();
 		anim_idle_l.tick();

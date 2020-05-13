@@ -11,6 +11,7 @@ public class ImageCropper {
 		ImageCropper.loadedImage = image.getSubimage(x, y, width, height);
 		return loadedImage;
 		} catch(Exception e) {
+			e.printStackTrace();
 			return loadedImage;
 		}
 	}
