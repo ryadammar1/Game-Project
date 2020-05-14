@@ -10,8 +10,6 @@ public class SceneCollision {
 	private HashSet<Point> outline;
 
 	public SceneCollision(BufferedImage alpha) {
-		
-		
 		outline = GenerateOutline(alpha);
 	}
 
@@ -24,7 +22,6 @@ public class SceneCollision {
 		    	if(alpha.getRGB(i, j) < -1)
 		    		tempOutline.add(new Point(i,j));
 		    }
-		
 		return tempOutline;
 	}
 	

@@ -4,12 +4,14 @@ import java.awt.Graphics;
 
 import dev.ryadammar.game.PlayerController;
 import dev.ryadammar.game.Handler;
+import dev.ryadammar.game.entities.creatures.Enemy;
 import dev.ryadammar.game.entities.creatures.Player;
 import dev.ryadammar.game.worlds.World;
 
 public class GameplayState extends State {
 
-	private Player player, player2, player3;
+	private Player player;
+	private Enemy enemy1, enemy2;
 	private World world;
 	private PlayerController controller;
 
@@ -17,25 +19,23 @@ public class GameplayState extends State {
 		super(handler);
 		world = new World(handler, "res/worlds/world1.lvl");
 		handler.setWorld(world);
-		player = new Player(handler, world.getSpawnX(), world.getSpawnY());
+		player = new Player(handler, 500, 0/* world.getSpawnX(), world.getSpawnY()*/);
 		handler.setPlayer(player);
-		player2 = new Player(handler, world.getSpawnX() + 400, world.getSpawnY() - 200);
-		handler.setPlayer(player2);
-		player3 = new Player(handler, world.getSpawnX() + 600, world.getSpawnY());
-		handler.setPlayer(player2);
+		enemy1 = new Enemy(handler, world.getSpawnX(), world.getSpawnY());
+		enemy2 = new Enemy(handler, world.getSpawnX() + 600, world.getSpawnY());
 		controller = new PlayerController(player, handler);
 
-		handler.getWorld().getCreatures().add(player3);
-		handler.getWorld().getCreatures().add(player2);
 		handler.getWorld().getCreatures().add(player);
+		handler.getWorld().getCreatures().add(enemy1);
+		handler.getWorld().getCreatures().add(enemy2);
 	}
 
 	@Override
 	public void tick() {
 		world.tick();
+		enemy1.tick();
 		player.tick();
-		player2.tick();
-		player3.tick();
+		enemy2.tick();
 		controller.tick();
 		handler.getGameCamera().centerOnEntity(player);
 	}
@@ -44,8 +44,8 @@ public class GameplayState extends State {
 	public void render(Graphics g) {
 		world.render(g);
 		player.render(g);
-		player2.render(g);
-		player3.render(g);
+		enemy1.render(g);
+		enemy2.render(g);
 	}
 
 	public Player getPlayer() {

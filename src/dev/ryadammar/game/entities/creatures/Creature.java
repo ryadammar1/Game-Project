@@ -84,7 +84,7 @@ public abstract class Creature extends Entity {
 	protected int range;
 	protected int attackDamage;
 
-	protected Line2D sight;
+	protected Line2D ray;
 
 	public Creature(Handler handler, float x, float y, int width, int height) {
 		super(handler, x, y, width, height);
@@ -111,14 +111,14 @@ public abstract class Creature extends Entity {
 		attackDamage = DEFAULT_ATTACK_DAMAGE;
 		range = DEFAULT_ATTACK_RANGE;
 
-		sight = new Line2D.Float();
+		ray = new Line2D.Float();
 	}
 
 	@Override
 	public void tick() {
 		updateHitbox();
-		state();
 		direction();
+		state();
 		gravity();
 		damage();
 		updateSight();
@@ -146,7 +146,9 @@ public abstract class Creature extends Entity {
 		g.setFont(Utils.consoleFont);
 		g.setColor(Color.WHITE);
 		g.drawString("Health: " + Integer.toString(health), (int) (hitbox.x - 16), (int) (hitbox.y - 16));
-		g.drawLine((int) sight.getX1(), (int) sight.getY1(), (int) sight.getX2(), (int) sight.getY2());
+		if (!updateSight())
+			g.drawLine((int) ray.getX1(), (int) ray.getY1(), (int) ray.getX2(), (int) ray.getY2());
+
 		g.drawRect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
 	}
 
@@ -264,11 +266,50 @@ public abstract class Creature extends Entity {
 		}
 	}
 
+	public boolean updateSight() {
+
+		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size() - 1)
+				.getCollision().getOutline();
+
+		Creature nearestCreature = findNearestCreature();
+
+		if (nearestCreature == null)
+			return true;
+
+		ray.setLine(
+				subhitboxes[0][(int) hitbox_subdiv_y / 2].x + subhitboxes[(int) hitbox_subdiv_x / 2][0].width / 2
+						- handler.getGameCamera().getxOffset(),
+				subhitboxes[0][0].y + subhitboxes[0][0].height / 2 - handler.getGameCamera().getyOffset(),
+				nearestCreature.subhitboxes[0][(int) nearestCreature.hitbox_subdiv_y / 2].x
+						+ nearestCreature.subhitboxes[(int) nearestCreature.hitbox_subdiv_x / 2][0].width / 2
+						- handler.getGameCamera().getxOffset(),
+				nearestCreature.subhitboxes[0][0].y + nearestCreature.subhitboxes[0][0].height / 2
+						- handler.getGameCamera().getyOffset());
+
+		float xOffset = handler.getGameCamera().getxOffset();
+		float yOffset = handler.getGameCamera().getyOffset();
+
+		double m = (ray.getY1() - ray.getY2()) / (ray.getX1() - ray.getX2());
+		double b = ray.getY1() + yOffset - (ray.getX1() + xOffset) * m;
+
+		int tolerance = 1;
+
+		for (int x = (int) Math.min(ray.getX1(), ray.getX2()) + (int) xOffset; x < Math.max(ray.getX1(), ray.getX2())
+				+ (int) xOffset; x++) {
+			int y = (int) (x * m + b);
+			for (int i = 0; i < tolerance; i++) {
+				if (sceneCollision.contains(new Point(x + i, y)))
+					return true;
+			}
+		}
+		return false;
+	}
+
 	public Creature findNearestCreature() {
-		Creature nearestCreature = this;
+		Creature nearestCreature = null;
 		long distance = -1;
 		for (Creature creature : handler.getWorld().getCreatures()) {
-			if (creature == this)
+			if (creature.getClass() == this.getClass())
 				;
 			else if (Math.pow((creature.x - x), 2) + Math.pow((creature.y - y), 2) < distance || distance == -1) {
 				distance = (int) (Math.pow((creature.x - x), 2) + Math.pow((creature.y - y), 2));
@@ -329,7 +370,7 @@ public abstract class Creature extends Entity {
 			Rectangle subhitbox = subhitboxes[i][hitbox_subdiv_y - 1];
 
 			if (sceneCollision.contains(
-					new Point((int) (subhitbox.x + Vx + subhitbox.width), (int) ((subhitbox.y + subhitbox.height))))
+					new Point((int) (subhitbox.x + Vx + subhitbox.width + 2), (int) ((subhitbox.y + subhitbox.height))))
 					|| sceneCollision
 							.contains(new Point((int) (subhitbox.x + Vx + subhitbox.width), (int) ((subhitbox.y))))) {
 				collides = true;
@@ -384,19 +425,6 @@ public abstract class Creature extends Entity {
 				subhitbox.y = (int) (y + subhitbox.yOffset);
 			}
 		}
-	}
-
-	public void updateSight() {
-		sight.setLine(
-				subhitboxes[0][(int) hitbox_subdiv_y / 2].x + subhitboxes[(int) hitbox_subdiv_x / 2][0].width / 2
-						- handler.getGameCamera().getxOffset(),
-				subhitboxes[0][0].y + subhitboxes[0][0].height / 2 - handler.getGameCamera().getyOffset(),
-				findNearestCreature().subhitboxes[0][(int) findNearestCreature().hitbox_subdiv_y / 2].x
-						+ findNearestCreature().subhitboxes[(int) findNearestCreature().hitbox_subdiv_x / 2][0].width
-								/ 2
-						- handler.getGameCamera().getxOffset(),
-				findNearestCreature().subhitboxes[0][0].y + findNearestCreature().subhitboxes[0][0].height / 2
-						- handler.getGameCamera().getyOffset());
 	}
 
 	public void updateAnimation() {

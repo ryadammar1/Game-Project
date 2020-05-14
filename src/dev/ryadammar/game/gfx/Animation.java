@@ -8,12 +8,12 @@ public class Animation {
 	private int f_speed, index;
 	private ArrayList<BufferedImage> frames;
 	private long lastTime, timer;
-	private boolean loop;
+	private boolean loopable;
 
-	public Animation(int f_speed, ArrayList<BufferedImage> frames, boolean loop) {
+	public Animation(int f_speed, ArrayList<BufferedImage> frames, boolean loopable) {
 		this.f_speed = f_speed;
 		this.frames = frames;
-		this.loop = loop;
+		this.loopable = loopable;
 		index = 0;
 		lastTime = System.currentTimeMillis();
 	}
@@ -28,7 +28,7 @@ public class Animation {
 		}
 
 		if (index > frames.size() - 1) {
-			if (loop)
+			if (!loopable)
 				index--;
 			else
 				index = 0;
