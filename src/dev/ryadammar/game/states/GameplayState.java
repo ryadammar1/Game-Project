@@ -9,7 +9,7 @@ import dev.ryadammar.game.worlds.World;
 
 public class GameplayState extends State {
 
-	private Player player, player2;
+	private Player player, player2, player3;
 	private World world;
 	private PlayerController controller;
 
@@ -19,11 +19,15 @@ public class GameplayState extends State {
 		handler.setWorld(world);
 		player = new Player(handler, world.getSpawnX(), world.getSpawnY());
 		handler.setPlayer(player);
-		player2 = new Player(handler, world.getSpawnX() + 40, world.getSpawnY());
+		player2 = new Player(handler, world.getSpawnX() + 400, world.getSpawnY() - 200);
+		handler.setPlayer(player2);
+		player3 = new Player(handler, world.getSpawnX() + 600, world.getSpawnY());
 		handler.setPlayer(player2);
 		controller = new PlayerController(player, handler);
 
+		handler.getWorld().getCreatures().add(player3);
 		handler.getWorld().getCreatures().add(player2);
+		handler.getWorld().getCreatures().add(player);
 	}
 
 	@Override
@@ -31,6 +35,7 @@ public class GameplayState extends State {
 		world.tick();
 		player.tick();
 		player2.tick();
+		player3.tick();
 		controller.tick();
 		handler.getGameCamera().centerOnEntity(player);
 	}
@@ -40,6 +45,7 @@ public class GameplayState extends State {
 		world.render(g);
 		player.render(g);
 		player2.render(g);
+		player3.render(g);
 	}
 
 	public Player getPlayer() {

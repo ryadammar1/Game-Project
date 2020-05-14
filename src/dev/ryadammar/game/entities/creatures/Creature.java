@@ -82,8 +82,9 @@ public abstract class Creature extends Entity {
 	// Attack
 
 	protected int range;
-	protected Line2D attackLine;
 	protected int attackDamage;
+
+	protected Line2D sight;
 
 	public Creature(Handler handler, float x, float y, int width, int height) {
 		super(handler, x, y, width, height);
@@ -107,9 +108,46 @@ public abstract class Creature extends Entity {
 		Vx = 0;
 		spf = handler.getGame().getSpf();
 
-		attackLine = new Line2D.Float();
 		attackDamage = DEFAULT_ATTACK_DAMAGE;
 		range = DEFAULT_ATTACK_RANGE;
+
+		sight = new Line2D.Float();
+	}
+
+	@Override
+	public void tick() {
+		updateHitbox();
+		state();
+		direction();
+		gravity();
+		damage();
+		updateSight();
+		updateAnimation();
+	}
+
+	// Gfx
+
+	@Override
+	public void render(Graphics g) {
+		g.drawImage(getAnimation().getCurrentFrame(), (int) (x - handler.getGameCamera().getxOffset()),
+				(int) (y - handler.getGameCamera().getyOffset()), width, height, null);
+
+		if (Settings.drawColisions) {
+			g.setColor(Color.MAGENTA);
+			for (Rectangle subhitboxes[] : subhitboxes) {
+				for (Rectangle subhitbox : subhitboxes) {
+					g.drawRect((int) (subhitbox.x - handler.getGameCamera().getxOffset()),
+							(int) (subhitbox.y - handler.getGameCamera().getyOffset()), subhitbox.width,
+							subhitbox.height);
+				}
+			}
+		}
+
+		g.setFont(Utils.consoleFont);
+		g.setColor(Color.WHITE);
+		g.drawString("Health: " + Integer.toString(health), (int) (hitbox.x - 16), (int) (hitbox.y - 16));
+		g.drawLine((int) sight.getX1(), (int) sight.getY1(), (int) sight.getX2(), (int) sight.getY2());
+		g.drawRect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
 	}
 
 	// Movement
@@ -212,16 +250,32 @@ public abstract class Creature extends Entity {
 
 	public void attack() {
 		for (Creature creature : handler.getWorld().getCreatures()) {
-			if (Math.abs(hitbox.x - (creature.hitbox.x)) <= creature.hitbox.width/2
+			if (creature == this)
+				;
+			else if (Math.abs(hitbox.x - (creature.hitbox.x)) <= creature.hitbox.width / 2
 					&& Math.abs(hitbox.y - creature.hitbox.y) <= range)
 				creature.giveDamage(5);
 			else if (Math.abs(hitbox.x - (creature.hitbox.x)) <= range
-						&& Math.abs(hitbox.y - creature.hitbox.y) <= range)
+					&& Math.abs(hitbox.y - creature.hitbox.y) <= range)
 				if (creature.hitbox.x >= hitbox.x && direction == Direction.right)
-					creature.giveDamage(5);
+					creature.giveDamage(attackDamage);
 				else if (creature.hitbox.x <= hitbox.x && direction == Direction.left)
-					creature.giveDamage(5);
+					creature.giveDamage(attackDamage);
 		}
+	}
+
+	public Creature findNearestCreature() {
+		Creature nearestCreature = this;
+		long distance = -1;
+		for (Creature creature : handler.getWorld().getCreatures()) {
+			if (creature == this)
+				;
+			else if (Math.pow((creature.x - x), 2) + Math.pow((creature.y - y), 2) < distance || distance == -1) {
+				distance = (int) (Math.pow((creature.x - x), 2) + Math.pow((creature.y - y), 2));
+				nearestCreature = creature;
+			}
+		}
+		return nearestCreature;
 	}
 
 	// Collision
@@ -320,12 +374,9 @@ public abstract class Creature extends Entity {
 		return collides;
 	}
 
-	@Override
-	public void tick() {
+	public void updateHitbox() {
 		hitbox.x = (int) (x + hitbox.xOffset - handler.getGameCamera().getxOffset());
 		hitbox.y = (int) (y + hitbox.yOffset - handler.getGameCamera().getyOffset());
-		attackLine.setLine(hitbox.x + hitbox.width / 2, hitbox.y + hitbox.height / 2,
-				attackLine.getX1() + range * direction.value, attackLine.getY1());
 
 		for (EntityHitbox[] subhitboxes : subhitboxes) {
 			for (EntityHitbox subhitbox : subhitboxes) {
@@ -333,12 +384,22 @@ public abstract class Creature extends Entity {
 				subhitbox.y = (int) (y + subhitbox.yOffset);
 			}
 		}
+	}
 
-		state();
-		direction();
-		gravity();
-		damage();
+	public void updateSight() {
+		sight.setLine(
+				subhitboxes[0][(int) hitbox_subdiv_y / 2].x + subhitboxes[(int) hitbox_subdiv_x / 2][0].width / 2
+						- handler.getGameCamera().getxOffset(),
+				subhitboxes[0][0].y + subhitboxes[0][0].height / 2 - handler.getGameCamera().getyOffset(),
+				findNearestCreature().subhitboxes[0][(int) findNearestCreature().hitbox_subdiv_y / 2].x
+						+ findNearestCreature().subhitboxes[(int) findNearestCreature().hitbox_subdiv_x / 2][0].width
+								/ 2
+						- handler.getGameCamera().getxOffset(),
+				findNearestCreature().subhitboxes[0][0].y + findNearestCreature().subhitboxes[0][0].height / 2
+						- handler.getGameCamera().getyOffset());
+	}
 
+	public void updateAnimation() {
 		anim_idle_r.tick();
 		anim_idle_l.tick();
 		anim_walk_r.tick();
@@ -347,32 +408,6 @@ public abstract class Creature extends Entity {
 		anim_sprint_l.tick();
 		anim_jump_r.tick();
 		anim_jump_l.tick();
-	}
-
-	// Gfx
-
-	@Override
-	public void render(Graphics g) {
-		g.drawImage(getAnimation().getCurrentFrame(), (int) (x - handler.getGameCamera().getxOffset()),
-				(int) (y - handler.getGameCamera().getyOffset()), width, height, null);
-
-		if (Settings.drawColisions) {
-			g.setColor(Color.MAGENTA);
-			for (Rectangle subhitboxes[] : subhitboxes) {
-				for (Rectangle subhitbox : subhitboxes) {
-					g.drawRect((int) (subhitbox.x - handler.getGameCamera().getxOffset()),
-							(int) (subhitbox.y - handler.getGameCamera().getyOffset()), subhitbox.width,
-							subhitbox.height);
-				}
-			}
-		}
-
-		g.setFont(Utils.consoleFont);
-		g.setColor(Color.WHITE);
-		g.drawString("Health: " + Integer.toString(health), (int) (hitbox.x - 16), (int) (hitbox.y - 16));
-		g.drawLine((int) attackLine.getX1(), (int) attackLine.getY1(), (int) attackLine.getX2(),
-				(int) attackLine.getY2());
-		g.drawRect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
 	}
 
 	public Animation getAnimation() {
@@ -402,7 +437,7 @@ public abstract class Creature extends Entity {
 	}
 
 	// GETTERS & SETTERS
-	
+
 	public int getHealth() {
 		return health;
 	}
