@@ -36,7 +36,7 @@ public class KeyManager implements KeyListener {
 	@Override
 	public void keyPressed(KeyEvent e) {
 		try {
-			handler.getPlayer().getController().getInputPressed(e);
+			handler.getGame().getGameplayState().getController().getInputPressed(e);
 			keys[e.getKeyCode()] = true;
 		} catch (Exception e_input) {
 		}

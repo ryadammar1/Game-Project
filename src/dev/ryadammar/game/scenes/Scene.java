@@ -10,7 +10,7 @@ public class Scene {
 
 	private BufferedImage texture;
 	private BufferedImage alpha;
-	private Collision collision;
+	private SceneCollision collision;
 	private Handler handler;
 	private int xScrollingDiv, yScrollingDiv;
 	
@@ -18,7 +18,7 @@ public class Scene {
 		
 		this.texture = texture;
 		if (isSolid)
-			this.collision = new Collision(alpha);
+			this.collision = new SceneCollision(alpha);
 		else
 			this.collision = null;
 		this.xScrollingDiv = xScrollingDiv;
@@ -44,7 +44,7 @@ public class Scene {
 		 */
 	}
 
-	public Collision getCollision() {
+	public SceneCollision getCollision() {
 		return collision;
 	}
 	

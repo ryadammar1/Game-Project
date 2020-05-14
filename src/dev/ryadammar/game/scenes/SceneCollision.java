@@ -5,11 +5,11 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-public class Collision {
+public class SceneCollision {
 
 	private HashSet<Point> outline;
 
-	public Collision(BufferedImage alpha) {
+	public SceneCollision(BufferedImage alpha) {
 		
 		
 		outline = GenerateOutline(alpha);

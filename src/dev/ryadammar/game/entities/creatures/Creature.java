@@ -4,19 +4,22 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.util.ArrayList;
+import java.awt.geom.Line2D;
 import java.util.HashSet;
 
 import dev.ryadammar.game.Handler;
 import dev.ryadammar.game.Settings;
 import dev.ryadammar.game.entities.Entity;
+import dev.ryadammar.game.entities.EntityHitbox;
 import dev.ryadammar.game.gfx.Animation;
-import dev.ryadammar.game.tiles.Tile;
 import dev.ryadammar.game.utils.Utils;
+import dev.ryadammar.game.scenes.Area;
+import dev.ryadammar.game.scenes.DamageArea;
 
 public abstract class Creature extends Entity {
 
 	public static final int DEFAULT_HEALTH = 10;
+	public static final int DEFAULT_ATTACK_DAMAGE = 2;
 	public static final float DEFAULT_GROUND_SPEED = 2.0f;
 	public static final float DEFAULT_SPRINTING_MULTIPLIER = 1.5f;
 	public static final float DEFAULT_AIR_DECELERATION = 0.01f;
@@ -25,7 +28,7 @@ public abstract class Creature extends Entity {
 	public static final float DEFAULT_AIR_ACCELERATION = 2.0f;
 	public static final float DEFAULT_JUMP_SPEED = 3.0f;
 	public static final int DEFAULT_WIDTH = 64, DEFAULT_HEIGHT = 64;
-	public static final boolean DEFAULT_DRAW_SPEED = false;
+	public static final int DEFAULT_ATTACK_RANGE = 64;
 
 	protected int health;
 
@@ -38,7 +41,13 @@ public abstract class Creature extends Entity {
 	protected State state;
 
 	protected enum Direction {
-		right, left
+		right(1), left(-1);
+
+		private int value;
+
+		Direction(int value) {
+			this.value = value;
+		}
 	}
 
 	protected Direction direction;
@@ -70,6 +79,12 @@ public abstract class Creature extends Entity {
 	protected Animation anim_jump_l;
 	protected Animation anim_jump_r;
 
+	// Attack
+
+	protected int range;
+	protected Line2D attackLine;
+	protected int attackDamage;
+
 	public Creature(Handler handler, float x, float y, int width, int height) {
 		super(handler, x, y, width, height);
 		health = DEFAULT_HEALTH;
@@ -91,6 +106,10 @@ public abstract class Creature extends Entity {
 		Vox = 0;
 		Vx = 0;
 		spf = handler.getGame().getSpf();
+
+		attackLine = new Line2D.Float();
+		attackDamage = DEFAULT_ATTACK_DAMAGE;
+		range = DEFAULT_ATTACK_RANGE;
 	}
 
 	// Movement
@@ -111,7 +130,7 @@ public abstract class Creature extends Entity {
 	}
 
 	public void move(float movement, int direction) {
-			
+
 		if ((Vox > 0 || direction == 1) && collisionRight()) {
 			Vox *= -0.5;
 			return;
@@ -131,8 +150,8 @@ public abstract class Creature extends Entity {
 				Vx = Vox + aa * spf;
 				x += Vx;
 			} else {
-				Vx = direction * Math.min(Math.abs(direction * groundSpeed * aa + Vox),
-						Math.abs(Vox + direction * aa * spf));
+				Vx = direction
+						* Math.min(Math.abs(direction * groundSpeed * aa + Vox), Math.abs(Vox + direction * aa * spf));
 				if (Math.signum(Vx) == Math.signum(Vox))
 					x += Vx;
 				else
@@ -162,7 +181,6 @@ public abstract class Creature extends Entity {
 	}
 
 	public void gravity() {
-
 		if (collisionUp()) {
 			Voy = 0;
 			Vy = Voy;
@@ -171,112 +189,166 @@ public abstract class Creature extends Entity {
 			Vy = (Voy + g * spf);
 			y += Vy;
 			Voy = Vy;
-					
+
 		} else {
 			Voy = 0;
 			Vy = 0;
 		}
 	}
-	
+
 	public void damage() {
 		if (Vy >= 5 && collisionDown())
 			health -= (int) (Vy - 5);
+		for (Area area : handler.getWorld().getAreas()) {
+			if (area instanceof DamageArea)
+				if (area.getBox().intersects(hitbox))
+					health = 0;
+		}
+	}
+
+	public void giveDamage(int damage) {
+		this.health -= damage;
+	}
+
+	public void attack() {
+		for (Creature creature : handler.getWorld().getCreatures()) {
+			if (Math.abs(hitbox.x - (creature.hitbox.x)) <= creature.hitbox.width/2
+					&& Math.abs(hitbox.y - creature.hitbox.y) <= range)
+				creature.giveDamage(5);
+			else if (Math.abs(hitbox.x - (creature.hitbox.x)) <= range
+						&& Math.abs(hitbox.y - creature.hitbox.y) <= range)
+				if (creature.hitbox.x >= hitbox.x && direction == Direction.right)
+					creature.giveDamage(5);
+				else if (creature.hitbox.x <= hitbox.x && direction == Direction.left)
+					creature.giveDamage(5);
+		}
 	}
 
 	// Collision
-	
+
 	public boolean collisionUp() {
-		
+
 		boolean collides = false;
-		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size()-1).getCollision().getOutline();
-		
-		for(int i = 0; i < hitbox_subdiv_y; i++) {	
+		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size() - 1)
+				.getCollision().getOutline();
+
+		for (int i = 0; i < hitbox_subdiv_y; i++) {
 			Rectangle subhitbox = subhitboxes[0][i];
-			
-		if  (sceneCollision.contains
-			(new Point((int) (x + subhitbox.x + subhitbox.width),(int) ((y + Vy + subhitbox.y + 1))))
-			|| sceneCollision.contains
-			(new Point((int) (x + subhitbox.x),(int) ((y + Vy + subhitbox.y + 1))))) {
-			collides = true;
-			break;
+
+			if (sceneCollision
+					.contains(new Point((int) (subhitbox.x + subhitbox.width), (int) ((Vy + subhitbox.y + 1))))
+					|| sceneCollision.contains(new Point((int) (subhitbox.x), (int) ((Vy + subhitbox.y + 1))))) {
+				collides = true;
+				break;
 			}
 		}
-		
+
 		return collides;
 	}
 
 	public boolean collisionDown() {
 		boolean collides = false;
-		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size()-1).getCollision().getOutline();
+		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size() - 1)
+				.getCollision().getOutline();
 
-		for(int i = 0; i < hitbox_subdiv_y; i++) {	
+		for (int i = 0; i < hitbox_subdiv_y; i++) {
 			Rectangle subhitbox = subhitboxes[hitbox_subdiv_x - 1][i];
-			
-		if  (sceneCollision.contains
-			(new Point((int) (x + subhitbox.x + subhitbox.width),(int) ((y + Vy + subhitbox.y + subhitbox.height + 1))))
-			|| sceneCollision.contains
-			(new Point((int) (x + subhitbox.x),(int) ((y + Vy + subhitbox.y + subhitbox.height + 1))))) {
-			collides = true;
-			break;
+
+			if (sceneCollision.contains(
+					new Point((int) (subhitbox.x + subhitbox.width), (int) ((Vy + subhitbox.y + subhitbox.height + 1))))
+					|| sceneCollision.contains(
+							new Point((int) (subhitbox.x), (int) ((Vy + subhitbox.y + subhitbox.height + 1))))) {
+				collides = true;
+				break;
 			}
 		}
-		
+
 		return collides;
 	}
 
 	public boolean collisionRight() {
 		boolean collides = false;
-		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size()-1).getCollision().getOutline();
-		
-		for(int i = 0; i < hitbox_subdiv_x; i++) {	
+		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size() - 1)
+				.getCollision().getOutline();
+
+		for (int i = 0; i < hitbox_subdiv_x; i++) {
 			Rectangle subhitbox = subhitboxes[i][hitbox_subdiv_y - 1];
-			
-		if  (sceneCollision.contains
-			(new Point((int) (x + subhitbox.x + Vx + subhitbox.width),(int) ((y + subhitbox.y + subhitbox.height))))
-			|| sceneCollision.contains
-			(new Point((int) (x + subhitbox.x + Vx + subhitbox.width),(int) ((y + subhitbox.y))))) {
-			collides = true;
-			break;
+
+			if (sceneCollision.contains(
+					new Point((int) (subhitbox.x + Vx + subhitbox.width), (int) ((subhitbox.y + subhitbox.height))))
+					|| sceneCollision
+							.contains(new Point((int) (subhitbox.x + Vx + subhitbox.width), (int) ((subhitbox.y))))) {
+				collides = true;
+				break;
 			}
 		}
-		
+
 		return collides;
 	}
 
 	public boolean collisionLeft() {
 		boolean collides = false;
-		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size()-1).getCollision().getOutline();
+		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size() - 1)
+				.getCollision().getOutline();
 
-		for(int i = 0; i < hitbox_subdiv_x; i++) {	
+		for (int i = 0; i < hitbox_subdiv_x; i++) {
 			Rectangle subhitbox = subhitboxes[i][0];
-		
-		if  (sceneCollision.contains
-			(new Point((int) (x + subhitbox.x + Vx),(int) ((y + subhitbox.y + subhitbox.height))))
-			|| sceneCollision.contains
-			(new Point((int) (x + subhitbox.x + Vx),(int) ((y + subhitbox.y))))) {
-			collides = true;
-			break;
+
+			if (sceneCollision.contains(new Point((int) (subhitbox.x + Vx), (int) ((subhitbox.y + subhitbox.height))))
+					|| sceneCollision.contains(new Point((int) (subhitbox.x + Vx), (int) ((subhitbox.y))))) {
+				collides = true;
+				break;
 			}
 		}
-		
+
 		return collides;
 	}
-	
+
 	public boolean collision(int x, int y) {
 		boolean collides = false;
-		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size()-1).getCollision().getOutline();
-		
+		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size() - 1)
+				.getCollision().getOutline();
+
 		Rectangle subhitbox = subhitboxes[x][y];
-		if  (sceneCollision.contains
-			(new Point((int) (x + subhitbox.x + Vx + subhitbox.width),(int) ((y + subhitbox.y + subhitbox.height))))
-			|| sceneCollision.contains
-			(new Point((int) (x + subhitbox.x + Vx + subhitbox.width),(int) ((y + subhitbox.y))))) {
+		if (sceneCollision.contains(
+				new Point((int) (subhitbox.x + Vx + subhitbox.width), (int) ((subhitbox.y + subhitbox.height))))
+				|| sceneCollision
+						.contains(new Point((int) (subhitbox.x + Vx + subhitbox.width), (int) ((subhitbox.y))))) {
 			collides = true;
-			}
-		
+		}
+
 		return collides;
 	}
-	
+
+	@Override
+	public void tick() {
+		hitbox.x = (int) (x + hitbox.xOffset - handler.getGameCamera().getxOffset());
+		hitbox.y = (int) (y + hitbox.yOffset - handler.getGameCamera().getyOffset());
+		attackLine.setLine(hitbox.x + hitbox.width / 2, hitbox.y + hitbox.height / 2,
+				attackLine.getX1() + range * direction.value, attackLine.getY1());
+
+		for (EntityHitbox[] subhitboxes : subhitboxes) {
+			for (EntityHitbox subhitbox : subhitboxes) {
+				subhitbox.x = (int) (x + subhitbox.xOffset);
+				subhitbox.y = (int) (y + subhitbox.yOffset);
+			}
+		}
+
+		state();
+		direction();
+		gravity();
+		damage();
+
+		anim_idle_r.tick();
+		anim_idle_l.tick();
+		anim_walk_r.tick();
+		anim_walk_l.tick();
+		anim_sprint_r.tick();
+		anim_sprint_l.tick();
+		anim_jump_r.tick();
+		anim_jump_l.tick();
+	}
+
 	// Gfx
 
 	@Override
@@ -286,19 +358,21 @@ public abstract class Creature extends Entity {
 
 		if (Settings.drawColisions) {
 			g.setColor(Color.MAGENTA);
-			for(Rectangle subhitboxes[] : subhitboxes) {
-				for(Rectangle subhitbox : subhitboxes) {
-				g.drawRect((int) (x + subhitbox.x - handler.getGameCamera().getxOffset()),
-						(int) (y + subhitbox.y - handler.getGameCamera().getyOffset()), subhitbox.width, subhitbox.height);
+			for (Rectangle subhitboxes[] : subhitboxes) {
+				for (Rectangle subhitbox : subhitboxes) {
+					g.drawRect((int) (subhitbox.x - handler.getGameCamera().getxOffset()),
+							(int) (subhitbox.y - handler.getGameCamera().getyOffset()), subhitbox.width,
+							subhitbox.height);
 				}
 			}
 		}
 
 		g.setFont(Utils.consoleFont);
 		g.setColor(Color.WHITE);
-		g.drawString("Health: " + Integer.toString(health),
-				(int) (x + hitbox_x - handler.getGameCamera().getxOffset() - 16),
-				(int) (y + hitbox_y - handler.getGameCamera().getyOffset() - 16));
+		g.drawString("Health: " + Integer.toString(health), (int) (hitbox.x - 16), (int) (hitbox.y - 16));
+		g.drawLine((int) attackLine.getX1(), (int) attackLine.getY1(), (int) attackLine.getX2(),
+				(int) attackLine.getY2());
+		g.drawRect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
 	}
 
 	public Animation getAnimation() {
@@ -328,7 +402,7 @@ public abstract class Creature extends Entity {
 	}
 
 	// GETTERS & SETTERS
-
+	
 	public int getHealth() {
 		return health;
 	}
@@ -347,10 +421,6 @@ public abstract class Creature extends Entity {
 
 	public void setSprintingMultiplier(float sprintingMultiplier) {
 		this.sprintMult = sprintingMultiplier;
-	}
-
-	public void setHealth(int health) {
-		this.health = health;
 	}
 
 	public float getG() {

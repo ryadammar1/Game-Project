@@ -24,5 +24,13 @@ public abstract class Area {
 	public abstract void render(Graphics g);
 	
 	public abstract void trigger();
+
+	public Rectangle getBox() {
+		return box;
+	}
+
+	public void setBox(Rectangle box) {
+		this.box = box;
+	}
 	
 }

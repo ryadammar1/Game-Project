@@ -4,11 +4,12 @@ import java.awt.Graphics;
 import java.util.ArrayList;
 
 import dev.ryadammar.game.Handler;
+import dev.ryadammar.game.entities.creatures.Creature;
+import dev.ryadammar.game.entities.creatures.Player;
 import dev.ryadammar.game.gfx.ImageLoader;
 import dev.ryadammar.game.scenes.Area;
 import dev.ryadammar.game.scenes.DamageArea;
 import dev.ryadammar.game.scenes.Scene;
-import dev.ryadammar.game.tiles.Tile;
 import dev.ryadammar.game.utils.Utils;
 
 public class World {
@@ -16,11 +17,11 @@ public class World {
 	private Handler handler;
 	private int width, height; // Unit: tiles
 	private int spawnX, spawnY; // Unit: tiles
-	private int[][] tiles; // Contains the id of a tile at coordinates x, y
 
 	private int bg_num;
 	private ArrayList<Scene> scenes;
 	private ArrayList<Area> areas;
+	private ArrayList<Creature> creatures;
 
 	private int scale;
 	private float g; // Gravity acceleration in pixels per spf^2
@@ -28,6 +29,7 @@ public class World {
 	public World(Handler handler, String path) {
 		scenes = new ArrayList<Scene>();
 		areas = new ArrayList<Area>();
+		creatures = new ArrayList<Creature>();
 		this.handler = handler;
 		loadWorld(path);
 
@@ -44,7 +46,6 @@ public class World {
 	}
 
 	public void render(Graphics g) {
-
 		for (int i = 0; i < bg_num; i++) {
 			scenes.get(i).render(g);
 		}
@@ -73,7 +74,6 @@ public class World {
 			}
 		}
 		
-
 		areas.add(new DamageArea(handler, 100, 100, 50, 50));
 	}
 
@@ -83,14 +83,6 @@ public class World {
 
 	public void setScale(int scale) {
 		this.scale = scale;
-	}
-
-	public int[][] getTiles() {
-		return tiles;
-	}
-
-	public void setTiles(int[][] tiles) {
-		this.tiles = tiles;
 	}
 
 	public float getG() {
@@ -135,6 +127,14 @@ public class World {
 
 	public ArrayList<Scene> getScenes() {
 		return scenes;
+	}
+
+	public ArrayList<Area> getAreas() {
+		return areas;
+	}
+	
+	public ArrayList<Creature> getCreatures() {
+		return creatures;
 	}
 
 }

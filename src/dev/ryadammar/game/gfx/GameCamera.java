@@ -2,7 +2,6 @@ package dev.ryadammar.game.gfx;
 
 import dev.ryadammar.game.Handler;
 import dev.ryadammar.game.entities.Entity;
-import dev.ryadammar.game.tiles.Tile;
 
 public class GameCamera {
 

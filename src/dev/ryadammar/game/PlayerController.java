@@ -5,15 +5,18 @@ import java.awt.event.KeyEvent;
 import dev.ryadammar.game.entities.creatures.Creature;
 import dev.ryadammar.game.entities.creatures.Player;
 
-public class Controller {
+public class PlayerController {
 
 	private Creature creature;
 	private Handler handler;
-	private boolean hasJumped;
 
-	public Controller(Creature creature, Handler handler) {
+	public PlayerController(Creature creature, Handler handler) {
 		this.creature = creature;
 		this.handler = handler;
+	}
+	
+	public void tick() {
+		getInputHold();
 	}
 
 	public void getInputHold() {
@@ -52,6 +55,10 @@ public class Controller {
 			creature.setVx(Math.signum(creature.getVox()) * 15.0f);
 			creature.setVox(Math.signum(creature.getVox()) * 15.0f);
 			creature.setVoy(Math.signum(-15.0f));
+		}
+		
+		if (e.getKeyCode() == KeyEvent.VK_X) {
+			creature.attack();
 		}
 
 		// Settings

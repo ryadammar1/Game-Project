@@ -1,7 +1,6 @@
 package dev.ryadammar.game.entities;
 
 import java.awt.Graphics;
-import java.awt.Rectangle;
 
 import dev.ryadammar.game.Handler;
 
@@ -14,28 +13,22 @@ public abstract class Entity {
 	protected float x, y;
 	protected int width, height;
 	
-	protected Rectangle hitbox;
-	protected Rectangle[][] subhitboxes;
+	protected EntityHitbox hitbox;
+	protected EntityHitbox[][] subhitboxes;
 	protected int hitbox_subdiv_x;
 	protected int hitbox_subdiv_y;
-
-	protected int hitbox_x;
-	protected int hitbox_y;
-	protected int hitbox_height;
-	protected int hitbox_width;
 	
 	public Entity(Handler handler, float x, float y, int width, int height) {
+		this.handler = handler;
+		
 		this.x = x;
 		this.y = y;
 		this.width = width;
 		this.height = height;
-		this.handler = handler;
+		
 		this.hitbox_subdiv_x = HITBOX_SUBDIVISON_X;
 		this.hitbox_subdiv_y = HITBOX_SUBDIVISON_Y;
-		this.hitbox_x = 0;
-		this.hitbox_y = 0;
-		this.hitbox_height = height;
-		this.hitbox_width = width;
+		this.hitbox = new EntityHitbox();
 	}
 	
 	public abstract void tick();
@@ -45,12 +38,16 @@ public abstract class Entity {
 	public abstract void gravity();
 	
 	protected void generateHitbox() {
-		subhitboxes = new Rectangle[hitbox_subdiv_x][hitbox_subdiv_y];
+
+		hitbox.xOffset = hitbox.x;
+		hitbox.yOffset = hitbox.y;
+		
+		subhitboxes = new EntityHitbox[hitbox_subdiv_x][hitbox_subdiv_y];
 		for(int y = 0; y < hitbox_subdiv_y; y++ ) {
 			for(int x = 0; x < hitbox_subdiv_x; x++ ) {	
-				subhitboxes[x][y] = new Rectangle
-						(hitbox_x + hitbox_width*y/hitbox_subdiv_y , hitbox_y + hitbox_height*x/hitbox_subdiv_x, 
-								hitbox_width/hitbox_subdiv_y, hitbox_height/hitbox_subdiv_x);
+				subhitboxes[x][y] = new EntityHitbox
+						(hitbox.x + hitbox.width*y/hitbox_subdiv_y , hitbox.y + hitbox.height*x/hitbox_subdiv_x, 
+								hitbox.width/hitbox_subdiv_y, hitbox.height/hitbox_subdiv_x);
 			}
 		}
 	}
