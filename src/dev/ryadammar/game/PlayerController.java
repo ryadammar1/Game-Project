@@ -37,14 +37,15 @@ public class PlayerController {
 			handler.getGameCamera().setxPeek(0);
 
 		// Movement
-		if (handler.getKeyManager().A && handler.getKeyManager().SHIFT)
-			creature.move(creature.getSprintingMultiplier(), -1);
-		else if (handler.getKeyManager().A)
-			creature.move(1.0f, -1);
-		else if (handler.getKeyManager().D && handler.getKeyManager().SHIFT)
+		if (handler.getKeyManager().D && handler.getKeyManager().SHIFT)
 			creature.move(creature.getSprintingMultiplier(), 1);
 		else if (handler.getKeyManager().D)
 			creature.move(1.0f, 1);
+		else if (handler.getKeyManager().A && handler.getKeyManager().SHIFT)
+			creature.move(creature.getSprintingMultiplier(), -1);
+		else if (handler.getKeyManager().A)
+			creature.move(1.0f, -1);
+
 		else
 			creature.move(0, 0);
 	}

@@ -121,7 +121,7 @@ public abstract class Creature extends Entity {
 		state();
 		gravity();
 		damage();
-		updateSight();
+		ray();
 		updateAnimation();
 	}
 
@@ -129,9 +129,7 @@ public abstract class Creature extends Entity {
 
 	@Override
 	public void render(Graphics g) {
-		g.drawImage(getAnimation().getCurrentFrame(), (int) (x - handler.getGameCamera().getxOffset()),
-				(int) (y - handler.getGameCamera().getyOffset()), width, height, null);
-
+		
 		if (Settings.drawColisions) {
 			g.setColor(Color.MAGENTA);
 			for (Rectangle subhitboxes[] : subhitboxes) {
@@ -142,14 +140,21 @@ public abstract class Creature extends Entity {
 				}
 			}
 		}
+		
+		g.drawImage(getAnimation().getCurrentFrame(), (int) (x - handler.getGameCamera().getxOffset()),
+				(int) (y - handler.getGameCamera().getyOffset()), width, height, null);
+
+		if (Settings.drawColisions) {
+			g.setColor(Color.MAGENTA);
+			//g.drawRect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
+		}
 
 		g.setFont(Utils.consoleFont);
 		g.setColor(Color.WHITE);
 		g.drawString("Health: " + Integer.toString(health), (int) (hitbox.x - 16), (int) (hitbox.y - 16));
-		if (!updateSight())
+		if (ray() && Settings.drawRay) {
 			g.drawLine((int) ray.getX1(), (int) ray.getY1(), (int) ray.getX2(), (int) ray.getY2());
-
-		g.drawRect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
+		}
 	}
 
 	// Movement
@@ -170,7 +175,7 @@ public abstract class Creature extends Entity {
 	}
 
 	public void move(float movement, int direction) {
-
+		
 		if ((Vox > 0 || direction == 1) && collisionRight()) {
 			Vox *= -0.5;
 			return;
@@ -179,7 +184,7 @@ public abstract class Creature extends Entity {
 		if ((Vox < 0 || direction == -1) && collisionLeft()) {
 			Vox *= -0.5;
 			return;
-		}
+		}	
 
 		if (collisionDown()) {
 			Vx = movement * direction * Math.min(Math.abs(groundSpeed), Math.abs(Vox + direction * ga * spf));
@@ -187,11 +192,9 @@ public abstract class Creature extends Entity {
 			Vox = Vx;
 		} else {
 			if (movement == 0) {
-				Vx = Vox + aa * spf;
-				x += Vx;
+				x += Vox;
 			} else {
-				Vx = direction
-						* Math.min(Math.abs(direction * groundSpeed * aa + Vox), Math.abs(Vox + direction * aa * spf));
+				Vx = direction * Math.abs(Vox + direction * aa * spf);
 				if (Math.signum(Vx) == Math.signum(Vox))
 					x += Vx;
 				else
@@ -266,7 +269,7 @@ public abstract class Creature extends Entity {
 		}
 	}
 
-	public boolean updateSight() {
+	public boolean ray() {
 
 		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size() - 1)
 				.getCollision().getOutline();
@@ -274,7 +277,7 @@ public abstract class Creature extends Entity {
 		Creature nearestCreature = findNearestCreature();
 
 		if (nearestCreature == null)
-			return true;
+			return false;
 
 		ray.setLine(
 				subhitboxes[0][(int) hitbox_subdiv_y / 2].x + subhitboxes[(int) hitbox_subdiv_x / 2][0].width / 2
@@ -299,14 +302,18 @@ public abstract class Creature extends Entity {
 			int y = (int) (x * m + b);
 			for (int i = 0; i < tolerance; i++) {
 				if (sceneCollision.contains(new Point(x + i, y)))
-					return true;
+					return false;
 			}
 		}
-		return false;
+		return true;
 	}
 
 	public Creature findNearestCreature() {
 		Creature nearestCreature = null;
+
+		if (this instanceof Player || Settings.drawRay)
+			return null;
+
 		long distance = -1;
 		for (Creature creature : handler.getWorld().getCreatures()) {
 			if (creature.getClass() == this.getClass())
@@ -323,7 +330,6 @@ public abstract class Creature extends Entity {
 
 	public boolean collisionUp() {
 
-		boolean collides = false;
 		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size() - 1)
 				.getCollision().getOutline();
 
@@ -331,18 +337,17 @@ public abstract class Creature extends Entity {
 			Rectangle subhitbox = subhitboxes[0][i];
 
 			if (sceneCollision
-					.contains(new Point((int) (subhitbox.x + subhitbox.width), (int) ((Vy + subhitbox.y + 1))))
-					|| sceneCollision.contains(new Point((int) (subhitbox.x), (int) ((Vy + subhitbox.y + 1))))) {
-				collides = true;
-				break;
+					.contains(new Point((int) (subhitbox.x + subhitbox.width - 1), (int) ((Vy + subhitbox.y + 1))))
+					|| sceneCollision.contains(new Point((int) (subhitbox.x + 1), (int) ((Vy + subhitbox.y + 1))))) {
+				return true;
 			}
 		}
 
-		return collides;
+		return false;
 	}
 
 	public boolean collisionDown() {
-		boolean collides = false;
+		
 		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size() - 1)
 				.getCollision().getOutline();
 
@@ -350,39 +355,35 @@ public abstract class Creature extends Entity {
 			Rectangle subhitbox = subhitboxes[hitbox_subdiv_x - 1][i];
 
 			if (sceneCollision.contains(
-					new Point((int) (subhitbox.x + subhitbox.width), (int) ((Vy + subhitbox.y + subhitbox.height + 1))))
+					new Point((int) (subhitbox.x + subhitbox.width - 1), (int) ((Vy + subhitbox.y + subhitbox.height + 1))))
 					|| sceneCollision.contains(
-							new Point((int) (subhitbox.x), (int) ((Vy + subhitbox.y + subhitbox.height + 1))))) {
-				collides = true;
-				break;
+							new Point((int) (subhitbox.x + 1), (int) ((Vy + subhitbox.y + subhitbox.height + 1))))) {
+				return true;
 			}
 		}
 
-		return collides;
+		return false;
 	}
 
 	public boolean collisionRight() {
-		boolean collides = false;
-		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size() - 1)
-				.getCollision().getOutline();
+		
+        HashSet < Point > sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size() - 1)
+            .getCollision().getOutline();
+        
+        for (int i = 0; i < hitbox_subdiv_x; i++) {
+            Rectangle subhitbox = subhitboxes[i][hitbox_subdiv_y - 1];
 
-		for (int i = 0; i < hitbox_subdiv_x; i++) {
-			Rectangle subhitbox = subhitboxes[i][hitbox_subdiv_y - 1];
-
-			if (sceneCollision.contains(
-					new Point((int) (subhitbox.x + Vx + subhitbox.width + 2), (int) ((subhitbox.y + subhitbox.height))))
-					|| sceneCollision
-							.contains(new Point((int) (subhitbox.x + Vx + subhitbox.width), (int) ((subhitbox.y))))) {
-				collides = true;
-				break;
-			}
-		}
-
-		return collides;
-	}
+            if (sceneCollision.contains(
+                    new Point((int)(subhitbox.x + Vx + subhitbox.width), (int)((subhitbox.y + subhitbox.height)))) ||
+                sceneCollision
+                .contains(new Point((int)(subhitbox.x + Vx + subhitbox.width), (int)((subhitbox.y))))) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 	public boolean collisionLeft() {
-		boolean collides = false;
 		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size() - 1)
 				.getCollision().getOutline();
 
@@ -391,28 +392,11 @@ public abstract class Creature extends Entity {
 
 			if (sceneCollision.contains(new Point((int) (subhitbox.x + Vx), (int) ((subhitbox.y + subhitbox.height))))
 					|| sceneCollision.contains(new Point((int) (subhitbox.x + Vx), (int) ((subhitbox.y))))) {
-				collides = true;
-				break;
+				return true;
 			}
 		}
 
-		return collides;
-	}
-
-	public boolean collision(int x, int y) {
-		boolean collides = false;
-		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size() - 1)
-				.getCollision().getOutline();
-
-		Rectangle subhitbox = subhitboxes[x][y];
-		if (sceneCollision.contains(
-				new Point((int) (subhitbox.x + Vx + subhitbox.width), (int) ((subhitbox.y + subhitbox.height))))
-				|| sceneCollision
-						.contains(new Point((int) (subhitbox.x + Vx + subhitbox.width), (int) ((subhitbox.y))))) {
-			collides = true;
-		}
-
-		return collides;
+		return false;
 	}
 
 	public void updateHitbox() {
