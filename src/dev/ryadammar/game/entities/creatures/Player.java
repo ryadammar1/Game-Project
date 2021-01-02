@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 
-import dev.ryadammar.game.PlayerController;
 import dev.ryadammar.game.Handler;
 import dev.ryadammar.game.Settings;
 import dev.ryadammar.game.entities.creatures.Creature.Direction;

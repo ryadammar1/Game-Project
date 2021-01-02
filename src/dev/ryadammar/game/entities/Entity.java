@@ -35,7 +35,7 @@ public abstract class Entity {
 	
 	public abstract void render(Graphics g);
 	
-	public abstract void gravity();
+	protected abstract void gravity();
 	
 	protected void generateHitbox() {
 

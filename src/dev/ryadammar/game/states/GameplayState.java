@@ -2,10 +2,11 @@ package dev.ryadammar.game.states;
 
 import java.awt.Graphics;
 
-import dev.ryadammar.game.PlayerController;
 import dev.ryadammar.game.Handler;
 import dev.ryadammar.game.entities.creatures.Enemy;
+import dev.ryadammar.game.entities.creatures.EnemyBehavior;
 import dev.ryadammar.game.entities.creatures.Player;
+import dev.ryadammar.game.entities.creatures.PlayerController;
 import dev.ryadammar.game.worlds.World;
 
 public class GameplayState extends State {
@@ -21,15 +22,23 @@ public class GameplayState extends State {
 		player = new Player(handler, world.getSpawnX(), world.getSpawnY());
 		handler.setPlayer(player);
 		controller = new PlayerController(player, handler);
-
-		handler.getWorld().getCreatures().add(player);
+		
+		enemy = new Enemy(handler, world.getSpawnX(), world.getSpawnY());
+		enemyBehavior = new EnemyBehavior(enemy, handler);
+		
+		handler.getWorld().addCreature(enemy, player);
 	}
+	
+	Enemy enemy;
+	EnemyBehavior enemyBehavior;
 
 	@Override
 	public void tick() {
 		world.tick();
 		player.tick();
 		controller.tick();
+		enemy.tick();
+		enemyBehavior.tick();
 		handler.getGameCamera().centerOnEntity(player);
 	}
 
@@ -37,6 +46,7 @@ public class GameplayState extends State {
 	public void render(Graphics g) {
 		world.render(g);
 		player.render(g);
+		enemy.render(g);
 	}
 
 	public Player getPlayer() {

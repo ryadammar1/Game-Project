@@ -2,9 +2,9 @@ package dev.ryadammar.game.states;
 
 import java.awt.Graphics;
 
-import dev.ryadammar.game.PlayerController;
 import dev.ryadammar.game.Handler;
 import dev.ryadammar.game.entities.creatures.Player;
+import dev.ryadammar.game.entities.creatures.PlayerController;
 
 public class MenuState extends State{
 

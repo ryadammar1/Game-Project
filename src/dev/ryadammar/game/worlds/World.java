@@ -77,6 +77,24 @@ public class World {
 		areas.add(new DamageArea(handler, 100, 100, 50, 50));
 	}
 
+	public void addCreature(Creature ... creatures) {
+		for (Creature creature : creatures) {
+			this.creatures.add(creature);
+		}
+	}
+	
+	public void addScene(Scene ... scenes) {
+		for (Scene scene : scenes) {
+			this.scenes.add(scene);
+		}
+	}
+
+	public void addArea(Area  ... areas) {
+		for (Area area : areas) {
+			this.areas.add(area);
+		}
+	}
+
 	public int getScale() {
 		return scale;
 	}

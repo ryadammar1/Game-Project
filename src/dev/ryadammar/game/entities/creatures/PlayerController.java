@@ -1,9 +1,9 @@
-package dev.ryadammar.game;
+package dev.ryadammar.game.entities.creatures;
 
 import java.awt.event.KeyEvent;
 
-import dev.ryadammar.game.entities.creatures.Creature;
-import dev.ryadammar.game.entities.creatures.Player;
+import dev.ryadammar.game.Handler;
+import dev.ryadammar.game.Settings;
 
 public class PlayerController {
 
@@ -53,9 +53,7 @@ public class PlayerController {
 	public void getInputPressed(KeyEvent e) {
 
 		if (e.getKeyCode() == KeyEvent.VK_C) {
-			creature.setVx(Math.signum(creature.getVox()) * 15.0f);
-			creature.setVox(Math.signum(creature.getVox()) * 15.0f);
-			creature.setVoy(Math.signum(-15.0f));
+			creature.setVoy(-1.5f);
 		}
 		
 		if (e.getKeyCode() == KeyEvent.VK_X) {

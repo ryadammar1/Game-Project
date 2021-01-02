@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 
-import dev.ryadammar.game.PlayerController;
 import dev.ryadammar.game.Handler;
 import dev.ryadammar.game.Settings;
 import dev.ryadammar.game.entities.creatures.Creature.Direction;
@@ -23,7 +22,6 @@ public class Enemy extends Creature {
 	 * @params handler, position x, position y
 	 * @author Ryad Ammar
 	 */
-
 	public Enemy(Handler handler, float x, float y) {
 		super(handler, x, y, 144, 150);
 
@@ -54,6 +52,9 @@ public class Enemy extends Creature {
 		//Attack
 		range = 70;
 		attackDamage = 2;
+		
+		//Movement
+		this.groundSpeed = 1.0f;
 	}
 
 }

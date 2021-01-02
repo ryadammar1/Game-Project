@@ -68,6 +68,13 @@ public abstract class Creature extends Entity {
 
 	protected int maxJumpsNum;
 
+	private boolean collisionUp;
+	private boolean collisionDown;
+	private boolean collisionRight;
+	private boolean collisionLeft;
+	
+	private boolean rayBool;
+
 	// Animation
 
 	protected Animation anim_walk_r;
@@ -118,6 +125,7 @@ public abstract class Creature extends Entity {
 	public void tick() {
 		updateHitbox();
 		direction();
+		collision();
 		state();
 		gravity();
 		damage();
@@ -130,29 +138,18 @@ public abstract class Creature extends Entity {
 	@Override
 	public void render(Graphics g) {
 		
-		if (Settings.drawColisions) {
-			g.setColor(Color.MAGENTA);
-			for (Rectangle subhitboxes[] : subhitboxes) {
-				for (Rectangle subhitbox : subhitboxes) {
-					g.drawRect((int) (subhitbox.x - handler.getGameCamera().getxOffset()),
-							(int) (subhitbox.y - handler.getGameCamera().getyOffset()), subhitbox.width,
-							subhitbox.height);
-				}
-			}
-		}
-		
 		g.drawImage(getAnimation().getCurrentFrame(), (int) (x - handler.getGameCamera().getxOffset()),
 				(int) (y - handler.getGameCamera().getyOffset()), width, height, null);
 
 		if (Settings.drawColisions) {
 			g.setColor(Color.MAGENTA);
-			//g.drawRect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
+			g.drawRect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
 		}
 
 		g.setFont(Utils.consoleFont);
 		g.setColor(Color.WHITE);
 		g.drawString("Health: " + Integer.toString(health), (int) (hitbox.x - 16), (int) (hitbox.y - 16));
-		if (ray() && Settings.drawRay) {
+		if (rayBool && Settings.drawRay) {
 			g.drawLine((int) ray.getX1(), (int) ray.getY1(), (int) ray.getX2(), (int) ray.getY2());
 		}
 	}
@@ -161,9 +158,9 @@ public abstract class Creature extends Entity {
 
 	protected int jumpCounter;
 
-	public void jump() {
+	protected void jump() {
 
-		if (collisionDown()) {
+		if (collisionDown) {
 			Voy = -jumpSpeed;
 			y += Voy;
 			jumpCounter = maxJumpsNum;
@@ -174,27 +171,29 @@ public abstract class Creature extends Entity {
 		}
 	}
 
-	public void move(float movement, int direction) {
-		
-		if ((Vox > 0 || direction == 1) && collisionRight()) {
+	protected void move(float movement, int direction) {
+
+		if ((Vox > 0 || direction == 1) && collisionRight) {
 			Vox *= -0.5;
 			return;
 		}
 
-		if ((Vox < 0 || direction == -1) && collisionLeft()) {
+		if ((Vox < 0 || direction == -1) && collisionLeft) {
 			Vox *= -0.5;
 			return;
-		}	
+		}
 
-		if (collisionDown()) {
+		if (collisionDown) {
 			Vx = movement * direction * Math.min(Math.abs(groundSpeed), Math.abs(Vox + direction * ga * spf));
 			x += Vx;
 			Vox = Vx;
 		} else {
 			if (movement == 0) {
-				x += Vox;
+				Vx = Vox;
+				x += Vx;
 			} else {
-				Vx = direction * Math.abs(Vox + direction * aa * spf);
+				Vx = direction
+						* Math.min(Math.abs(direction * groundSpeed * aa + Vox), Math.abs(Vox + direction * aa * spf));
 				if (Math.signum(Vx) == Math.signum(Vox))
 					x += Vx;
 				else
@@ -205,7 +204,7 @@ public abstract class Creature extends Entity {
 		}
 	}
 
-	public void state() {
+	private void state() {
 		if (Math.abs(Vy) > 0)
 			state = State.fall;
 		else if (Math.abs(Vx) < 0.5)
@@ -216,19 +215,19 @@ public abstract class Creature extends Entity {
 			state = State.sprint;
 	}
 
-	public void direction() {
+	private void direction() {
 		if (Vx > 0.3)
 			direction = Direction.right;
 		if (Vx < -0.3)
 			direction = Direction.left;
 	}
 
-	public void gravity() {
-		if (collisionUp()) {
+	protected void gravity() {
+		if (collisionUp) {
 			Voy = 0;
 			Vy = Voy;
 		}
-		if (!collisionDown()) {
+		if (!collisionDown) {
 			Vy = (Voy + g * spf);
 			y += Vy;
 			Voy = Vy;
@@ -239,8 +238,8 @@ public abstract class Creature extends Entity {
 		}
 	}
 
-	public void damage() {
-		if (Vy >= 5 && collisionDown())
+	private void damage() {
+		if (Vy >= 5 && collisionDown)
 			health -= (int) (Vy - 5);
 		for (Area area : handler.getWorld().getAreas()) {
 			if (area instanceof DamageArea)
@@ -249,11 +248,18 @@ public abstract class Creature extends Entity {
 		}
 	}
 
-	public void giveDamage(int damage) {
+	private void giveDamage(int damage) {
 		this.health -= damage;
 	}
+	
+	protected void collision() {
+		this.collisionDown = collisionDown();
+		this.collisionUp = collisionUp();
+		this.collisionRight = collisionRight();
+		this.collisionLeft = collisionLeft();
+	}
 
-	public void attack() {
+	protected void attack() {
 		for (Creature creature : handler.getWorld().getCreatures()) {
 			if (creature == this)
 				;
@@ -269,15 +275,17 @@ public abstract class Creature extends Entity {
 		}
 	}
 
-	public boolean ray() {
+	private void ray() {
 
 		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size() - 1)
 				.getCollision().getOutline();
 
 		Creature nearestCreature = findNearestCreature();
 
-		if (nearestCreature == null)
-			return false;
+		if (nearestCreature == null) {
+			rayBool = false;
+			return;
+		}
 
 		ray.setLine(
 				subhitboxes[0][(int) hitbox_subdiv_y / 2].x + subhitboxes[(int) hitbox_subdiv_x / 2][0].width / 2
@@ -301,17 +309,21 @@ public abstract class Creature extends Entity {
 				+ (int) xOffset; x++) {
 			int y = (int) (x * m + b);
 			for (int i = 0; i < tolerance; i++) {
-				if (sceneCollision.contains(new Point(x + i, y)))
-					return false;
+				if (sceneCollision.contains(new Point(x + i, y))) {
+					rayBool = false;
+					return;
+				}
 			}
 		}
-		return true;
+		
+		rayBool = true;
+		return;
 	}
 
-	public Creature findNearestCreature() {
+	private Creature findNearestCreature() {
 		Creature nearestCreature = null;
 
-		if (this instanceof Player || Settings.drawRay)
+		if (this instanceof Player || !Settings.drawRay)
 			return null;
 
 		long distance = -1;
@@ -328,7 +340,7 @@ public abstract class Creature extends Entity {
 
 	// Collision
 
-	public boolean collisionUp() {
+	private boolean collisionUp() {
 
 		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size() - 1)
 				.getCollision().getOutline();
@@ -346,7 +358,7 @@ public abstract class Creature extends Entity {
 		return false;
 	}
 
-	public boolean collisionDown() {
+	private boolean collisionDown() {
 		
 		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size() - 1)
 				.getCollision().getOutline();
@@ -365,7 +377,7 @@ public abstract class Creature extends Entity {
 		return false;
 	}
 
-	public boolean collisionRight() {
+	private boolean collisionRight() {
 		
         HashSet < Point > sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size() - 1)
             .getCollision().getOutline();
@@ -383,7 +395,7 @@ public abstract class Creature extends Entity {
         return false;
     }
 
-	public boolean collisionLeft() {
+	private boolean collisionLeft() {
 		HashSet<Point> sceneCollision = handler.getWorld().getScenes().get(handler.getWorld().getScenes().size() - 1)
 				.getCollision().getOutline();
 
@@ -399,7 +411,7 @@ public abstract class Creature extends Entity {
 		return false;
 	}
 
-	public void updateHitbox() {
+	private void updateHitbox() {
 		hitbox.x = (int) (x + hitbox.xOffset - handler.getGameCamera().getxOffset());
 		hitbox.y = (int) (y + hitbox.yOffset - handler.getGameCamera().getyOffset());
 
@@ -411,7 +423,7 @@ public abstract class Creature extends Entity {
 		}
 	}
 
-	public void updateAnimation() {
+	private void updateAnimation() {
 		anim_idle_r.tick();
 		anim_idle_l.tick();
 		anim_walk_r.tick();
@@ -422,7 +434,7 @@ public abstract class Creature extends Entity {
 		anim_jump_l.tick();
 	}
 
-	public Animation getAnimation() {
+	private Animation getAnimation() {
 
 		if (state != State.fall) {
 			anim_jump_r.reset();
@@ -550,4 +562,28 @@ public abstract class Creature extends Entity {
 		this.Vx = Vx;
 	}
 
+	public boolean isCollisionUp() {
+		return collisionUp;
+	}
+
+	public boolean isCollisionDown() {
+		return collisionDown;
+	}
+
+	public boolean isCollisionRight() {
+		return collisionRight;
+	}
+
+	public boolean isCollisionLeft() {
+		return collisionLeft;
+	}
+
+	public boolean isRayBool() {
+		return rayBool;
+	}
+
+	public Line2D getRay() {
+		return ray;
+	}
+	
 }
