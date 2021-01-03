@@ -56,17 +56,34 @@ public class PlayerController {
 			creature.setVoy(-1.5f);
 		}
 		
-		if (e.getKeyCode() == KeyEvent.VK_X) {
+		if (e.getKeyCode() == KeyEvent.VK_X && !isCooldown()) {
+			startCooldown();
 			creature.attack();
 		}
 
-		// Settings
 		if (e.getKeyCode() == KeyEvent.VK_W)
 			creature.jump();
+		
+		// Settings
+		
 		if (e.getKeyCode() == KeyEvent.VK_F1)
 			Settings.toggleConsole();
 		if (e.getKeyCode() == KeyEvent.VK_F2)
 			Settings.toggleColisions();
+		if (e.getKeyCode() == KeyEvent.VK_F3)
+			Settings.toggleRay();
+	}
+	
+	// Timer for 1 second
+	
+	private boolean isCooldown() {
+		return System.nanoTime() - startTime < 1000000000;
+	}
+
+	private long startTime = 0;
+	
+	private void startCooldown() {
+		startTime = System.nanoTime();
 	}
 
 }

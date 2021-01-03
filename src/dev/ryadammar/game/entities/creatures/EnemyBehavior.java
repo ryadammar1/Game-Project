@@ -21,13 +21,14 @@ public class EnemyBehavior {
 
 	private void getState() {
 		if (creature.isRayBool())
-			attacking();
+			pursuing();
 		else
 			patrolling();
 	}
 
-	private void attacking() {
-		if (Math.abs(creature.getX() - handler.getPlayer().getX()) < creature.range) {
+	private void pursuing() {
+		if (Math.abs(creature.getX() - handler.getPlayer().getX()) < creature.range && !isCooldown()) {
+			startCooldown();
 			creature.attack();
 			creature.move(0, 0);
 		}
@@ -47,12 +48,24 @@ public class EnemyBehavior {
 		creature.move(1.0f, direction);
 	}
 
-	private void goTo(int x, int y) {
+	public void goTo(int x, int y) {
 		if (creature.getX() < x-1 && !creature.isCollisionRight())
 			creature.move(creature.getSprintingMultiplier(), 1);
 		else if (creature.getX() > x+1 && !creature.isCollisionLeft())
 			creature.move(creature.getSprintingMultiplier(), -1);
 		else creature.move(0, 0);;
 	}
+	
+	// Timer for 2 second
+	
+	private boolean isCooldown() {
+		return System.nanoTime() - startTime < 2000000000;
+	}
 
+	private long startTime = 0;
+	
+	private void startCooldown() {
+		startTime = System.nanoTime();
+	}
+	
 }

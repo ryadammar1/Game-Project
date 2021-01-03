@@ -16,6 +16,13 @@ import dev.ryadammar.game.utils.Utils;
 import dev.ryadammar.game.scenes.Area;
 import dev.ryadammar.game.scenes.DamageArea;
 
+/**
+ * @author Ryad Ammar
+ * 
+ * Superclass of all living entities.
+ *
+ */
+
 public abstract class Creature extends Entity {
 
 	public static final int DEFAULT_HEALTH = 10;
@@ -53,12 +60,12 @@ public abstract class Creature extends Entity {
 	protected Direction direction;
 
 	protected float Voy;
-	protected float Vy;
+	protected float Vy; 
 	protected float Vox;
 	protected float Vx;
-	protected float g;
-	protected float spf;
-	protected float ga;
+	protected float g; 
+	protected float spf; 
+	protected float ga; 
 	protected float aa;
 	protected float d;
 
@@ -91,6 +98,8 @@ public abstract class Creature extends Entity {
 	protected int range;
 	protected int attackDamage;
 
+	// Misc
+	
 	protected Line2D ray;
 
 	public Creature(Handler handler, float x, float y, int width, int height) {
@@ -259,13 +268,14 @@ public abstract class Creature extends Entity {
 		this.collisionLeft = collisionLeft();
 	}
 
+
 	protected void attack() {
 		for (Creature creature : handler.getWorld().getCreatures()) {
 			if (creature == this)
 				;
 			else if (Math.abs(hitbox.x - (creature.hitbox.x)) <= creature.hitbox.width / 2
 					&& Math.abs(hitbox.y - creature.hitbox.y) <= range)
-				creature.giveDamage(5);
+				creature.giveDamage(attackDamage);
 			else if (Math.abs(hitbox.x - (creature.hitbox.x)) <= range
 					&& Math.abs(hitbox.y - creature.hitbox.y) <= range)
 				if (creature.hitbox.x >= hitbox.x && direction == Direction.right)
@@ -323,7 +333,7 @@ public abstract class Creature extends Entity {
 	private Creature findNearestCreature() {
 		Creature nearestCreature = null;
 
-		if (this instanceof Player || !Settings.drawRay)
+		if (this instanceof Player)
 			return null;
 
 		long distance = -1;
